@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,6 +13,10 @@ namespace Adenine.Compiler
         {
             List<Line> lines = SplitLines(code);
             List<Token> tokens = SplitTokens(lines);
+
+            List<TokenTreeObject> tokenTree = CreateTokensTree(tokens);
+
+            TokenTreeLogging(tokenTree);
         }
 
         private static List<Line> SplitLines(string code)
@@ -70,8 +75,7 @@ namespace Adenine.Compiler
                         char symbol = token.Text[j];
 
                         if (symbol == '{' || symbol == '}' ||
-                            symbol == '(' || symbol == ')' ||
-                            symbol == '\'')
+                            symbol == '(' || symbol == ')' /*|| symbol == '\''*/)
                         {
                             string split = token.Text.Remove(0, j + 1);
 
@@ -98,6 +102,114 @@ namespace Adenine.Compiler
             }
 
             return tokens;
+        }
+
+        private static List<TokenTreeObject> CreateTokensTree(List<Token> tokens)
+        {
+            List<TokenTreeObject> tokenTree = new();
+
+            List<TokenTreeObject> currentBranch = tokenTree;
+
+            int braceCount = 0;
+            //int bracketCount = 0;
+
+            Stack<List<TokenTreeObject>> stack = new();
+            //stack.Push(currentBranch);
+
+            foreach (Token token in tokens)
+            {
+                if (token.Text == "{" || token.Text == "(")
+                {
+                    stack.Push(currentBranch);
+                    currentBranch = currentBranch[currentBranch.Count - 1].Branch;
+                    braceCount++;
+                }
+
+                if (token.Text == "}" || token.Text == ")")
+                {
+                    if (braceCount <= 0) { }
+
+                    currentBranch = stack.Pop();
+                    braceCount--;
+                }
+
+                currentBranch.Add(new(token));
+            }
+
+            return tokenTree;
+        }
+
+        private static void TokenTreeLogging(List<TokenTreeObject> tokenTree)
+        {
+            List<TokenTreeObject> currentBranch = tokenTree;
+            int offset = 0;
+
+            StringBuilder stringBuilder = new();
+            bool needExit = false;
+
+            Stack<(List<TokenTreeObject> branch, int lastIndex)> stack = new();
+
+            int startIndex = 0;
+
+            while (!needExit)
+            {
+                if (startIndex >= currentBranch.Count)
+                    break;
+
+                for (int i = startIndex; i < currentBranch.Count; i++)
+                {
+                    startIndex = 0;
+
+                    var treeToken = currentBranch[i];
+
+                    if (i <= 0 && offset > 0)
+                    {
+                        stringBuilder.Append(new string(' ', offset - 1));
+                        stringBuilder.Append("└");
+                    }
+
+                    else if (i >= currentBranch.Count - 1 && offset > 0)
+                    {
+                        stringBuilder.Append(new string(' ', offset - 1));
+                        stringBuilder.Append("▼");
+                    }
+
+                    else
+                    {
+                        stringBuilder.Append(new string(' ', offset));
+                    }
+
+                    stringBuilder.Append(treeToken.Token.Text + "\n");
+
+                    if (treeToken.Branch.Count > 0)
+                    {
+                        stack.Push((currentBranch, i));
+                        currentBranch = treeToken.Branch;
+                        offset++;
+                        break;
+                    }
+
+                    else if (i == currentBranch.Count - 1)
+                    {
+                        if (stack.Count <= 0)
+                            needExit = true;
+
+                        else
+                        {
+                            var oldBranch = stack.Pop();
+                            currentBranch = oldBranch.branch;
+                            startIndex = oldBranch.lastIndex + 1;
+                            offset--;
+                        }
+
+                        break;
+                    }
+                }
+            }
+
+            string filePath = "treeLog.txt";
+
+            File.WriteAllText(filePath, stringBuilder.ToString());
         }
 
         private static bool IsNotSpace(char symbol)
