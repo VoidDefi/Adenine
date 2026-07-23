@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Adenine.Compiler.Errors;
+using Adenine.Compiler.Registry;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Principal;
@@ -9,15 +11,25 @@ namespace Adenine.Compiler
 {
     internal static class AdenineCompiler
     {
-        public static void Compile(string code)
+        public static List<Error> Compile(string code)
         {
+            List<Error> errors = new();
+
             List<Line> lines = SplitLines(code);
             List<Token> tokens = SplitTokens(lines);
 
             List<TokenTreeObject> tokenTree = CreateTokensTree(tokens);
 
-            TokenTreeLogging(tokenTree);
+            Logging.SaveTokenTree(tokenTree);
+
+            CheckTree(tokenTree, out List<Error> treeErrors);
+            errors = errors.Concat(treeErrors).ToList();
+
+
+            return errors;
         }
+
+        #region Code Splits
 
         private static List<Line> SplitLines(string code)
         {
@@ -26,7 +38,7 @@ namespace Adenine.Compiler
 
             for (int i = 0; i < rawLines.Length; i++)
             {
-                lines.Add(new Line(rawLines[i], i));
+                lines.Add(new Line(rawLines[i], i + 1));
             }
 
             return lines;
@@ -125,6 +137,8 @@ namespace Adenine.Compiler
                     braceCount++;
                 }
 
+                currentBranch.Add(new(token));
+
                 if (token.Text == "}" || token.Text == ")")
                 {
                     if (braceCount <= 0) { }
@@ -132,60 +146,86 @@ namespace Adenine.Compiler
                     currentBranch = stack.Pop();
                     braceCount--;
                 }
-
-                currentBranch.Add(new(token));
             }
 
             return tokenTree;
         }
 
-        private static void TokenTreeLogging(List<TokenTreeObject> tokenTree)
+        #endregion
+
+        private static void CheckTree(List<TokenTreeObject> tokenTree, out List<Error> errors)
         {
+            errors = new();
+
             List<TokenTreeObject> currentBranch = tokenTree;
-            int offset = 0;
-
-            StringBuilder stringBuilder = new();
-            bool needExit = false;
-
             Stack<(List<TokenTreeObject> branch, int lastIndex)> stack = new();
 
+            int branchDeep = 0;
+
             int startIndex = 0;
+            bool needExit = false;
 
             while (!needExit)
             {
                 if (startIndex >= currentBranch.Count)
                     break;
 
+                if (currentBranch.Count == 1)
+                {
+                    errors.Add(new NotEndBracketError(currentBranch[0].Token.LineNumber));
+                }
+
+                else if (currentBranch.Count >= 2)
+                {
+                    Token start = currentBranch[0].Token;
+                    Token end = currentBranch[currentBranch.Count - 1].Token;
+
+                    if ((start.Text == "{" && end.Text != "}") ||
+                        (start.Text == "(" && end.Text != ")")) 
+                    {
+                        errors.Add(new WrongBracketError(end.LineNumber));
+                    }
+                }
+
                 for (int i = startIndex; i < currentBranch.Count; i++)
                 {
                     startIndex = 0;
 
                     var treeToken = currentBranch[i];
+                    Token token = treeToken.Token;
 
-                    if (i <= 0 && offset > 0)
+                    if (token.Text == ReservedNames.Gen)
                     {
-                        stringBuilder.Append(new string(' ', offset - 1));
-                        stringBuilder.Append("└");
+                        if (branchDeep != 0)
+                        {
+                            errors.Add(new NotAvailableInContext(token.LineNumber));
+                        }
                     }
 
-                    else if (i >= currentBranch.Count - 1 && offset > 0)
+                    else if (token.Text == ReservedNames.Condition ||
+                             token.Text == ReservedNames.Result)
                     {
-                        stringBuilder.Append(new string(' ', offset - 1));
-                        stringBuilder.Append("▼");
+                        if (branchDeep != 1)
+                        {
+                            errors.Add(new NotAvailableInContext(token.LineNumber));
+                        }
                     }
 
-                    else
+                    //Check, all why not equals gen, condition, result
+                    else if (ReservedNames.NameExist(token.Text)) 
                     {
-                        stringBuilder.Append(new string(' ', offset));
+                        if (branchDeep != 2)
+                        {
+                            errors.Add(new NotAvailableInContext(token.LineNumber));
+                        }
                     }
-
-                    stringBuilder.Append(treeToken.Token.Text + "\n");
 
                     if (treeToken.Branch.Count > 0)
                     {
                         stack.Push((currentBranch, i));
                         currentBranch = treeToken.Branch;
-                        offset++;
+                        branchDeep++;
+
                         break;
                     }
 
@@ -199,7 +239,7 @@ namespace Adenine.Compiler
                             var oldBranch = stack.Pop();
                             currentBranch = oldBranch.branch;
                             startIndex = oldBranch.lastIndex + 1;
-                            offset--;
+                            branchDeep--;
                         }
 
                         break;
@@ -207,9 +247,63 @@ namespace Adenine.Compiler
                 }
             }
 
-            string filePath = "treeLog.txt";
+            return;
+        }
 
-            File.WriteAllText(filePath, stringBuilder.ToString());
+        private static List<Error> AssemblyDNA(List<TokenTreeObject> tokenTree)
+        {
+            List<Error> errors = new();
+
+            List<TokenTreeObject> currentBranch = tokenTree;
+            Stack<(List<TokenTreeObject> branch, int lastIndex)> stack = new();
+
+            int branchDeep = 0;
+
+            int startIndex = 0;
+            bool needExit = false;
+
+            while (!needExit)
+            {
+                if (startIndex >= currentBranch.Count)
+                    break;
+
+                for (int i = startIndex; i < currentBranch.Count; i++)
+                {
+                    startIndex = 0;
+
+                    var treeToken = currentBranch[i];
+                    Token token = treeToken.Token;
+
+
+
+                    if (treeToken.Branch.Count > 0)
+                    {
+                        stack.Push((currentBranch, i));
+                        currentBranch = treeToken.Branch;
+                        branchDeep++;
+
+                        break;
+                    }
+
+                    else if (i == currentBranch.Count - 1)
+                    {
+                        if (stack.Count <= 0)
+                            needExit = true;
+
+                        else
+                        {
+                            var oldBranch = stack.Pop();
+                            currentBranch = oldBranch.branch;
+                            startIndex = oldBranch.lastIndex + 1;
+                            branchDeep--;
+                        }
+
+                        break;
+                    }
+                }
+            }
+
+            return errors;
         }
 
         private static bool IsNotSpace(char symbol)

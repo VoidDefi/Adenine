@@ -13,5 +13,15 @@ namespace Adenine.Compiler
         public string? Path { get; set; }
 
         public int Line { get; set; }
+
+        public Error(int line)
+        {
+            Line = line;
+        }
+
+        public override string ToString()
+        {
+            return $"In line {Line}: {Message}";
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Adenine.Compiler;
+using Adenine.Compiler.Registry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,22 @@ namespace Adenine
     {
         public static void Main(string[] args)
         {
-            AdenineCompiler.Compile(File.ReadAllText("code.adn"));
+            ReservedNames.SetupRegistry();
+
+            List<Error> errors = AdenineCompiler.Compile(File.ReadAllText("code.adn"));
+
+            if (errors.Count > 0)
+            {
+                for (int i = 0; i < errors.Count; i++)
+                {
+                    Console.WriteLine(errors[i].ToString());
+                }
+            }
+
+            else 
+            {
+                Console.WriteLine("Compilation was successful!");
+            }
 
             /*if (args == null || args.Length <= 0)
             {
