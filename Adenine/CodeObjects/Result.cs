@@ -6,21 +6,18 @@ using System.Threading.Tasks;
 
 namespace Adenine.CodeObjects
 {
-    internal struct Condition
+    internal struct Result
     {
-        public bool IsInverted { get; private set; }
+        public ProteinOperation Operation { get; private set; }
 
         public int ProteinIndex { get; private set; }
 
-        public ComparisonOperator Operator { get; private set; }
-
         public float Value { get; private set; }
 
-        public Condition(bool isInverted, int proteinIndex, ComparisonOperator comparisonOperator, float value)
+        public Result(ProteinOperation operation, int proteinIndex, float value)
         {
-            IsInverted = isInverted;
+            Operation = operation;
             ProteinIndex = proteinIndex;
-            Operator = comparisonOperator;
             Value = value;
         }
     }

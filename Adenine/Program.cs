@@ -13,6 +13,7 @@ namespace Adenine
         public static void Main(string[] args)
         {
             ReservedNames.SetupRegistry();
+            ReservedSymbols.SetupRegistry();
 
             List<Error> errors = AdenineCompiler.Compile(File.ReadAllText("code.adn"));
 

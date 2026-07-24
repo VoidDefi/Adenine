@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace Adenine.Compiler.Errors
 {
-    internal class NotAvailableInContext : Error
+    internal class NeedProteinNameError : Error
     {
-        public NotAvailableInContext(int line) : base(line)
+        public NeedProteinNameError(int line) : base(line)
         {
         }
 
-        public override string Message => "Not available in this context";
+        public override string Message => "Need name for protein";
     }
 }

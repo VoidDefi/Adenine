@@ -1,4 +1,5 @@
-﻿using Adenine.Compiler.Errors;
+﻿using Adenine.CodeObjects;
+using Adenine.Compiler.Errors;
 using Adenine.Compiler.Registry;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,10 @@ namespace Adenine.Compiler
             CheckTree(tokenTree, out List<Error> treeErrors);
             errors = errors.Concat(treeErrors).ToList();
 
+            if (errors.Count > 0) return errors;
+
+            DNA dna = AssemblyDNA(tokenTree, out List<Error> assemblyErrors);
+            errors = errors.Concat(assemblyErrors).ToList();
 
             return errors;
         }
@@ -198,7 +203,7 @@ namespace Adenine.Compiler
                     {
                         if (branchDeep != 0)
                         {
-                            errors.Add(new NotAvailableInContext(token.LineNumber));
+                            errors.Add(new NotAvailableInContextError(token.LineNumber));
                         }
                     }
 
@@ -207,7 +212,7 @@ namespace Adenine.Compiler
                     {
                         if (branchDeep != 1)
                         {
-                            errors.Add(new NotAvailableInContext(token.LineNumber));
+                            errors.Add(new NotAvailableInContextError(token.LineNumber));
                         }
                     }
 
@@ -216,7 +221,7 @@ namespace Adenine.Compiler
                     {
                         if (branchDeep != 2)
                         {
-                            errors.Add(new NotAvailableInContext(token.LineNumber));
+                            errors.Add(new NotAvailableInContextError(token.LineNumber));
                         }
                     }
 
@@ -250,9 +255,13 @@ namespace Adenine.Compiler
             return;
         }
 
-        private static List<Error> AssemblyDNA(List<TokenTreeObject> tokenTree)
+        private static DNA AssemblyDNA(List<TokenTreeObject> tokenTree, out List<Error> errors)
         {
-            List<Error> errors = new();
+            errors = new();
+
+            List<Token> genNames = new();
+            List<List<Token>> genConditions = new();
+            List<List<Token>> genResults = new();
 
             List<TokenTreeObject> currentBranch = tokenTree;
             Stack<(List<TokenTreeObject> branch, int lastIndex)> stack = new();
@@ -262,10 +271,20 @@ namespace Adenine.Compiler
             int startIndex = 0;
             bool needExit = false;
 
+            bool genDefine = false;
+
+            bool conditionDefine = false;
+            bool resultDefine = false;
+
+            bool conditionHasEnd = false;
+            bool resultHasEnd = false;
+
             while (!needExit)
             {
                 if (startIndex >= currentBranch.Count)
                     break;
+
+                bool genDefineStart = false;
 
                 for (int i = startIndex; i < currentBranch.Count; i++)
                 {
@@ -274,7 +293,61 @@ namespace Adenine.Compiler
                     var treeToken = currentBranch[i];
                     Token token = treeToken.Token;
 
+                    if (genDefineStart)
+                    {
+                        if (!ReservedNames.NameExist(token.Text) && !ReservedSymbols.SymbolExist(token.Text))
+                        {
+                            if (treeToken.Branch.Count >= 2)
+                            {
+                                genNames.Add(token);
+                                genDefine = true;
+                            }
 
+                            else
+                            {
+                                errors.Add(new NotDefinedBodyError(token.LineNumber));
+                            }
+                        }
+
+                        else
+                        {
+                            errors.Add(new ReservedNameError(token.LineNumber));
+                        }
+                    }
+
+                    if (conditionDefine)
+                    {
+                        genConditions[genConditions.Count - 1].Add(token);
+                    }
+
+                    if (resultDefine)
+                    {
+                        genResults[genResults.Count - 1].Add(token);
+                    }
+
+                    if (token.Text == ReservedNames.Gen)
+                    {
+                        if (!genDefineStart)
+                            genDefineStart = true;
+                    }
+
+                    if (token.Text == ReservedNames.Condition)
+                    {
+                        if (!conditionDefine)
+                        {
+                            conditionDefine = true;
+                            genConditions.Add(new());
+                        }
+                    }
+
+                    if (token.Text == ReservedNames.Result)
+                    {
+                        if (!resultDefine)
+                        {
+                            resultDefine = true;
+                            genResults.Add(new());
+                        }
+                    }
 
                     if (treeToken.Branch.Count > 0)
                     {
@@ -296,6 +369,36 @@ namespace Adenine.Compiler
                             currentBranch = oldBranch.branch;
                             startIndex = oldBranch.lastIndex + 1;
                             branchDeep--;
+
+                            if (genDefine && branchDeep <= 0)
+                            {
+                                genDefine = false;
+
+                                if (!conditionHasEnd)
+                                {
+                                    errors.Add(new NotDefineConditionError(token.LineNumber));
+                                }
+
+                                if (!resultHasEnd)
+                                {
+                                    errors.Add(new NotDefineResultError(token.LineNumber));
+                                }
+
+                                conditionHasEnd = false;
+                                resultHasEnd = false;
+                            }
+
+                            if (conditionDefine && branchDeep <= 1)
+                            {
+                                conditionDefine = false;
+                                conditionHasEnd = true;
+                            }
+
+                            if (resultDefine && branchDeep <= 1)
+                            {
+                                resultDefine = false;
+                                resultHasEnd = true;
+                            }
                         }
 
                         break;
@@ -303,7 +406,212 @@ namespace Adenine.Compiler
                 }
             }
 
-            return errors;
+            if (errors.Count > 0) return null;
+
+            List<Gen> genes = ProcessGens(genNames, genConditions, genResults, out int proteinCount, out List<Error> processErrors);
+            errors = errors.Concat(processErrors).ToList();
+
+            return null;
+        }
+
+        private static List<Gen> ProcessGens(List<Token> genNames, List<List<Token>> genConditions, List<List<Token>> genResults, out int proteinCounts, out List<Error> errors)
+        {
+            List<Token> notRealizedProteinNames = new();
+            List<Token> proteinNames = new();
+
+            Dictionary<string, List<NotCompiledCondition>> conditions = new();
+
+            errors = new();
+
+            for (int i = 0; i < genConditions.Count; i++)
+            {
+                List<Token> tokens = genConditions[i];
+
+                conditions.Add(genNames[i].Text, new());
+
+                if (tokens[0].Text == "{" && tokens[tokens.Count - 1].Text == "}")
+                {
+                    bool invert = false;
+                    bool exist = false;
+
+                    string protein = null;
+
+                    ComparisonOperator? operation = null;
+                    float? value = null;
+
+                    LogicOperator logicOperator = LogicOperator.None;
+
+                    for (int j = 1; j < tokens.Count - 1; j++)
+                    {
+                        Token token = tokens[j];
+                        if (token.Text == ReservedNames.Not)
+                        {
+                            if (exist || protein != null || invert)
+                            {
+                                errors.Add(new NotAvailableInContextError(token.LineNumber));
+                            }
+
+                            else invert = true;
+                        }
+
+                        else if (token.Text == ReservedNames.Exist)
+                        {
+                            if (exist || protein != null)
+                            {
+                                errors.Add(new NotAvailableInContextError(token.LineNumber));
+                            }
+
+                            else exist = true;
+                        }
+
+                        else if (protein != null)
+                        {
+                            if (ComparisonOperatorParser.TryParse(token.Text, out ComparisonOperator? parsedOperator))
+                            {
+                                if (exist || protein == null || operation != null)
+                                {
+                                    errors.Add(new NotAvailableInContextError(token.LineNumber));
+                                }
+
+                                else
+                                {
+                                    if (parsedOperator.HasValue) operation = parsedOperator;
+
+                                    else throw new Exception();
+                                }
+                            }
+
+                            else if (float.TryParse(token.Text, out float parsedValue))
+                            {
+                                if (exist || protein == null || operation == null)
+                                {
+                                    errors.Add(new NotAvailableInContextError(token.LineNumber));
+                                }
+
+                                else value = parsedValue;
+                            }
+
+                            else if (token.Text == ReservedNames.And || token.Text == ReservedNames.Or)
+                            {
+                                if ((!exist && (protein == null || operation == null || value == null)) ||
+                                    (exist && (protein == null || operation != null || value == null)) ||
+                                    logicOperator != LogicOperator.None)
+                                {
+                                    errors.Add(new NotAvailableInContextError(token.LineNumber));
+                                }
+
+                                else logicOperator = token.Text == ReservedNames.And ? LogicOperator.And : LogicOperator.Or;
+                            }
+
+
+                            else if (operation != null &&
+                                    !ReservedNames.NameExist(token.Text) &&
+                                    !ReservedSymbols.SymbolExist(token.Text))
+                            {
+                                if (exist || protein == null)
+                                {
+                                    errors.Add(new NotAvailableInContextError(token.LineNumber));
+                                }
+
+                                else value = parsedValue;
+                            }
+                        }
+
+                        else
+                        {
+                            if (!ReservedNames.NameExist(token.Text) &&
+                                !ReservedSymbols.SymbolExist(token.Text))
+                            {
+                                if (protein != null)
+                                {
+                                    errors.Add(new NotAvailableInContextError(token.LineNumber));
+                                }
+
+                                else protein = token.Text;
+                            }
+
+                            else errors.Add(new ReservedNameError(token.LineNumber));
+                        }
+
+                        bool isEnd = j >= tokens.Count - 2;
+
+                        if ((isEnd || logicOperator != LogicOperator.None) && errors.Count <= 0)
+                        {
+                            if (isEnd && logicOperator != LogicOperator.None)
+                            {
+                                errors.Add(new NotAvailableInContextError(token.LineNumber));
+                            }
+
+                            else if (!isEnd && logicOperator == LogicOperator.None)
+                            {
+                                errors.Add(new NotAvailableInContextError(token.LineNumber));
+                            }
+
+                            if (protein == null)
+                            {
+                                errors.Add(new NeedProteinNameError(token.LineNumber));
+                            }
+
+                            else
+                            {
+                                if (exist)
+                                {
+                                    if (protein == null)
+                                    {
+                                        throw new Exception();
+                                    }
+
+                                    NotCompiledCondition condition = new
+                                    (
+                                        invert,
+                                        protein,
+                                        ComparisonOperator.More,
+                                        0f,
+                                        logicOperator
+                                    );
+
+                                    conditions[genNames[i].Text].Add(condition);
+                                }
+
+                                else
+                                {
+                                    if (protein == null || conditions == null || value == null)
+                                    {
+                                        throw new Exception();
+                                    }
+
+                                    NotCompiledCondition condition = new
+                                    (
+                                        invert,
+                                        protein,
+                                        operation.Value,
+                                        value.Value,
+                                        logicOperator
+                                    );
+
+                                    conditions[genNames[i].Text].Add(condition);
+                                }
+                            }
+
+                            invert = false;
+                            exist = false;
+                            protein = null;
+                            operation = null;
+                            value = null;
+                            logicOperator = LogicOperator.None;
+                        }
+                    }
+                }
+
+                else if (tokens[0].Text != "{") 
+                    errors.Add(new NeedBraceError(tokens[0].LineNumber));
+
+                else if (tokens[tokens.Count - 1].Text != "}")
+                    errors.Add(new NeedBraceError(tokens[tokens.Count - 1].LineNumber));
+            }
+
+            proteinCounts = 0;
+            return null;
         }
 
         private static bool IsNotSpace(char symbol)

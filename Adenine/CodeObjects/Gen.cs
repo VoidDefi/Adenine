@@ -6,8 +6,16 @@ using System.Threading.Tasks;
 
 namespace Adenine.CodeObjects
 {
-    public class Gen
+    internal class Gen
     {
-        //string name
+        public Condition[] Conditions { get; private set; } = [];
+
+        public Result[] Results { get; private set; } = [];
+
+        public Gen(Condition[] conditions, Result[] results) 
+        { 
+            Conditions = conditions;
+            Results = results;
+        }
     }
 }
