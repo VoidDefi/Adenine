@@ -4,9 +4,9 @@
     {
         Equal,
         NotEqual,
-        More,
+        Greater,
         Less,
-        MoreOrEqual,
+        GreaterOrEqual,
         LessOrEqual
     }
 
@@ -24,49 +24,18 @@
                 case ComparisonOperator.NotEqual:
                     operation = "!=";
                     break;
-                case ComparisonOperator.More:
+                case ComparisonOperator.Greater:
                     operation = ">";
                     break;
                 case ComparisonOperator.Less:
                     operation = "<";
                     break;
-                case ComparisonOperator.MoreOrEqual:
+                case ComparisonOperator.GreaterOrEqual:
                     operation = ">=";
                     break;
                 case ComparisonOperator.LessOrEqual:
                     operation = "<=";
                     break;
-            }
-
-            return operation;
-        }
-
-        public static ComparisonOperator Parse(string? token)
-        {
-            ComparisonOperator operation = ComparisonOperator.Equal;
-
-            switch (token)
-            {
-                case "==":
-                    operation = ComparisonOperator.Equal;
-                    break;
-                case "!=":
-                    operation = ComparisonOperator.NotEqual;
-                    break;
-                case ">":
-                    operation = ComparisonOperator.More;
-                    break;
-                case "<":
-                    operation = ComparisonOperator.Less;
-                    break;
-                case ">=":
-                    operation = ComparisonOperator.MoreOrEqual;
-                    break;
-                case "<=":
-                    operation = ComparisonOperator.LessOrEqual;
-                    break;
-                default:
-                    throw new ArgumentException();
             }
 
             return operation;
@@ -83,13 +52,13 @@
                     operation = ComparisonOperator.NotEqual;
                     break;
                 case ">":
-                    operation = ComparisonOperator.More;
+                    operation = ComparisonOperator.Greater;
                     break;
                 case "<":
                     operation = ComparisonOperator.Less;
                     break;
                 case ">=":
-                    operation = ComparisonOperator.MoreOrEqual;
+                    operation = ComparisonOperator.GreaterOrEqual;
                     break;
                 case "<=":
                     operation = ComparisonOperator.LessOrEqual;

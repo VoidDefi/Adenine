@@ -18,23 +18,29 @@ namespace Adenine.Compiler.Registry
 
         public static string Exist => "exist";
 
-        public static string Concentration => "concentration";
-
         public static string And => "and";
 
         public static string Or => "or";
 
         public static string Not => "not";
 
-        public static string Create => "create";
-
-        public static string Delete => "delete";
+        public static string Set => "set";
 
         public static string Add => "add";
 
         public static string Sub => "sub";
 
+        public static string Mul => "mul";
+
+        public static string Div => "div";
+
+        public static string Mod => "mod";
+
         public static string Action => "action";
+
+        public static string GetLink => "getlink";
+
+        public static string GetGen => "getgen";
 
         public static string Next => "next";
 
