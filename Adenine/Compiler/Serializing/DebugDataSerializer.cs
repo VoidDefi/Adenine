@@ -1,11 +1,5 @@
 ﻿using Adenine.CodeObjects;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Adenine.Compiler.Serializing
 {
@@ -46,6 +40,8 @@ namespace Adenine.Compiler.Serializing
                 genOffset += gen.Length;
             }
 
+            gensOffsets.Add(genOffset);
+
             List<byte> proteinMetadata = new();
 
             //Add proteins count
@@ -77,6 +73,49 @@ namespace Adenine.Compiler.Serializing
             ];
 
             return debugBytes;
+        }
+
+        public static DebugData DeSerialize(Cell cell, byte[] debugBytes)
+        {
+            int proteinsCount = BitConverter.ToInt32(debugBytes, 0);
+            int[] proteinIndexes = new int[proteinsCount + 1];
+
+            for (int i = 0; i < proteinsCount + 1; i++)
+            {
+                proteinIndexes[i] = BitConverter.ToInt32(debugBytes, i * 4 + 4);
+            }
+
+            string[] proteins = new string[proteinsCount];
+
+            for (int i = 0; i < proteinsCount; i++)
+            {
+                int start = proteinIndexes[i];
+                int end = proteinIndexes[i + 1];
+
+                proteins[i] = Encoding.UTF8.GetString(debugBytes, start, end - start);
+            }
+
+            int gensStart = proteinIndexes[proteinsCount];
+
+            int gensCount = BitConverter.ToInt32(debugBytes, gensStart);
+            int[] genIndexes = new int[gensCount + 1];
+
+            for (int i = 0; i < gensCount + 1; i++)
+            {
+                genIndexes[i] = BitConverter.ToInt32(debugBytes, gensStart + i * 4 + 4);
+            }
+
+            string[] gens = new string[gensCount];
+
+            for (int i = 0; i < gensCount; i++)
+            {
+                int start = genIndexes[i];
+                int end = genIndexes[i + 1];
+
+                gens[i] = Encoding.UTF8.GetString(debugBytes, start, end - start);
+            }
+
+            return new DebugData(cell, proteins, gens);
         }
     }
 }
