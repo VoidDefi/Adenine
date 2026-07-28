@@ -11,17 +11,17 @@ namespace Adenine.Compiler.NotCompiledObjects
     {
         public bool IsInverted { get; private set; }
 
-        public string ProteinName { get; private set; }
+        public Token ProteinName { get; private set; }
 
         public ComparisonOperator Operator { get; private set; }
 
         public float? Value { get; private set; }
 
-        public string? ComparingVariable { get; private set; }
+        public Token? ComparingVariable { get; private set; }
 
         public LogicOperator LogicOperator { get; private set; }
 
-        public NotCompiledCondition(bool isInverted, string proteinName, ComparisonOperator comparisonOperator, float value, LogicOperator logicOperator)
+        public NotCompiledCondition(bool isInverted, Token proteinName, ComparisonOperator comparisonOperator, float value, LogicOperator logicOperator)
         {
             IsInverted = isInverted;
             ProteinName = proteinName;
@@ -31,7 +31,7 @@ namespace Adenine.Compiler.NotCompiledObjects
             LogicOperator = logicOperator;
         }
 
-        public NotCompiledCondition(bool isInverted, string proteinName, ComparisonOperator comparisonOperator, string comparingVariable, LogicOperator logicOperator)
+        public NotCompiledCondition(bool isInverted, Token proteinName, ComparisonOperator comparisonOperator, Token comparingVariable, LogicOperator logicOperator)
         {
             IsInverted = isInverted;
             ProteinName = proteinName;
@@ -45,15 +45,15 @@ namespace Adenine.Compiler.NotCompiledObjects
         {
             if (ComparingVariable == null && Value.HasValue)
             {
-                return $"{(IsInverted ? "!(" : "")}{ProteinName} " +
+                return $"{(IsInverted ? "!(" : "")}{ProteinName.Text} " +
                        $"{ComparisonOperatorParser.ToString(Operator)} {Value}{(IsInverted ? ")" : "")}" +
                        $"{(LogicOperator != LogicOperator.None ? " " + LogicOperator.ToString().ToLower() : "")}";
             }
 
             else if (ComparingVariable != null && Value == null)
             {
-                return $"{(IsInverted ? "!(" : "")}{ProteinName} " +
-                       $"{ComparisonOperatorParser.ToString(Operator)} {ComparingVariable}{(IsInverted ? ")" : "")}" +
+                return $"{(IsInverted ? "!(" : "")}{ProteinName.Text} " +
+                       $"{ComparisonOperatorParser.ToString(Operator)} {ComparingVariable.Value.Text}{(IsInverted ? ")" : "")}" +
                        $"{(LogicOperator != LogicOperator.None ? " " + LogicOperator.ToString().ToLower() : "")}";
             }
 

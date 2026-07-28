@@ -14,7 +14,7 @@
 
         public override string ToString()
         {
-            return $"[line {Number + 1}]: \"{Text}\"";
+            return $"[line {Number}]: \"{Text}\"";
         }
     }
 }

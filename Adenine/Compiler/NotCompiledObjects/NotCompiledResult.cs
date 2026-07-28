@@ -9,17 +9,17 @@ namespace Adenine.Compiler.NotCompiledObjects
 {
     internal struct NotCompiledResult
     {
-        public ProteinOperation Operation { get; set; }
+        public ProteinOperation Operation { get; private set; }
 
-        public bool Action { get; set; }
+        public bool Action { get; private set; }
 
-        public Token ProteinName { get; set; }
+        public Token ProteinName { get; private set; }
 
-        public float? Value { get; set; } = null;
+        public float? Value { get; private set; } = null;
 
-        public Token? InputName { get; set; } = null;
+        public Token? InputName { get; private set; } = null;
 
-        public NameTranslateMode? TranslateMode { get; set; } = null;
+        public NameTranslateMode? TranslateMode { get; private set; } = null;
 
         public NotCompiledResult(ProteinOperation operation, bool action, Token proteinName, float value)
         {
@@ -27,6 +27,8 @@ namespace Adenine.Compiler.NotCompiledObjects
             Action = action;
             ProteinName = proteinName;
             Value = value;
+            InputName = null;
+            TranslateMode = null;
         }
 
         public NotCompiledResult(ProteinOperation operation, bool action, Token proteinName, Token inputName, NameTranslateMode? translateMode)
@@ -34,6 +36,7 @@ namespace Adenine.Compiler.NotCompiledObjects
             Operation = operation;
             Action = action;
             ProteinName = proteinName;
+            Value = null;
             InputName = inputName;
             TranslateMode = translateMode;
         }

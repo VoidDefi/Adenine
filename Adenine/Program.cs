@@ -1,10 +1,7 @@
-﻿using Adenine.Compiler;
+﻿using Adenine.CodeObjects;
+using Adenine.Compiler;
 using Adenine.Compiler.Registry;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Adenine.Compiler.Serializing;
 
 namespace Adenine
 {
@@ -14,8 +11,14 @@ namespace Adenine
         {
             ReservedNames.SetupRegistry();
             ReservedSymbols.SetupRegistry();
+            FunctionalProteinsRegistry.Setup();
 
-            List<Error> errors = AdenineCompiler.Compile(File.ReadAllText("code.adn"));
+            string code = File.ReadAllText("code.adn");
+
+            List<Error> errors;
+            DebugData debugData = null;
+
+            Cell cell = AdenineCompiler.Compile(code, false, out debugData, out errors);
 
             if (errors.Count > 0)
             {
@@ -27,7 +30,13 @@ namespace Adenine
 
             else 
             {
+                if (cell == null) throw new Exception();
+                if (debugData == null) throw new Exception();
+
                 Console.WriteLine("Compilation was successful!");
+
+                byte[] debugBytes = DebugDataSerializer.Serialize(debugData);
+                File.WriteAllBytes("program.df", debugBytes);
             }
 
             /*if (args == null || args.Length <= 0)
