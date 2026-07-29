@@ -40,6 +40,7 @@ namespace Adenine
 
                 byte[] programBytes = ProgramSerializer.Serialize(cell);
                 File.WriteAllBytes("program.gex", programBytes);
+                Cell cell1 = ProgramSerializer.DeSerialize(programBytes);
             }
 
             /*if (args == null || args.Length <= 0)

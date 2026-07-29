@@ -59,9 +59,48 @@ namespace Adenine.Compiler.Serializing
 
             currentIndex += 4 * 2;
 
-            //
+            Gen[] gens = new Gen[gensCount];
 
-            return null;
+            for (int i = 0; i < gensCount; i++)
+            {
+                int conditionsCount = BitConverter.ToInt32(bytes, currentIndex);
+                int resultsCount = BitConverter.ToInt32(bytes, currentIndex + 4);
+
+                currentIndex += 4 * 2;
+
+                Condition[] conditions = new Condition[conditionsCount];
+                Result[] results = new Result[resultsCount];
+
+                for (int j = 0; j < conditionsCount; j++)
+                {
+                    Condition condition = new Condition();
+                    condition.DeSerialize(bytes, currentIndex); 
+
+                    conditions[j] = condition;
+
+                    currentIndex += condition.ByteSize;
+                }
+
+                for (int j = 0; j < resultsCount; j++)
+                {
+                    Result result = new Result();
+                    result.DeSerialize(bytes, currentIndex);
+
+                    results[j] = result;
+
+                    currentIndex += result.ByteSize;
+                }
+
+                if (conditions.Length <= 0 || results.Length <= 0)
+                    throw new Exception("Conditions or results count <= 0");
+
+                if (conditions[conditions.Length - 1].LogicOperator != LogicOperator.None)
+                    throw new Exception("End logic operator must be none");
+
+                gens[i] = new Gen(conditions, results);
+            }
+
+            return new Cell(gens, proteinsCount);
         }
     }
 }
