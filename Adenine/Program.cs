@@ -37,6 +37,9 @@ namespace Adenine
 
                 byte[] debugBytes = DebugDataSerializer.Serialize(debugData);
                 File.WriteAllBytes("program.df", debugBytes);
+
+                byte[] programBytes = ProgramSerializer.Serialize(cell);
+                File.WriteAllBytes("program.gex", programBytes);
             }
 
             /*if (args == null || args.Length <= 0)

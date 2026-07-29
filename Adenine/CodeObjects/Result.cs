@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Adenine.CodeObjects
 {
-    internal struct Result
+    internal struct Result : ISerializing
     {
         public ProteinOperation Operation { get; private set; }
 
@@ -21,6 +21,13 @@ namespace Adenine.CodeObjects
         public int InputProtein { get; private set; } = -1;
 
         public bool UseProteinValue => InputProtein != -1;
+
+        public int ByteSize =>
+            1 + //Operation
+            1 + //Action
+            4 + //ProteinIndex
+            4 + //Value
+            4;  //InputProtein
 
         public Result(ProteinOperation operation, bool action, int proteinIndex, float value)
         {
@@ -51,6 +58,50 @@ namespace Adenine.CodeObjects
             }
 
             return $"{operation} {action}p#{ProteinIndex}({Value})";
+        }
+
+        public byte[] Serialize()
+        {
+            List<byte> bytes = new(ByteSize);
+
+            bytes.Add((byte)Operation);
+            bytes.Add((byte)(Action ? 1 : 0));
+            bytes.AddRange(BitConverter.GetBytes(ProteinIndex));
+            bytes.AddRange(BitConverter.GetBytes(Value));
+            bytes.AddRange(BitConverter.GetBytes(InputProtein));
+
+            if (bytes.Count != ByteSize)
+                throw new Exception("Invalid size");
+
+            return bytes.ToArray();
+        }
+
+        public void DeSerialize(byte[] bytes, int startIndex = 0)
+        {
+            if (bytes.Length < ByteSize)
+                throw new Exception("Invalid size");
+
+            int currentOffset = startIndex;
+
+            byte rawOperation = bytes[currentOffset];
+            currentOffset += 1;
+
+            Action = bytes[currentOffset] > 0;
+            currentOffset += 1;
+
+            ProteinIndex = BitConverter.ToInt32(bytes, currentOffset);
+            currentOffset += 4;
+
+            Value = BitConverter.ToSingle(bytes, currentOffset);
+            currentOffset += 4;
+
+            InputProtein = BitConverter.ToInt32(bytes, currentOffset);
+            currentOffset += 4;
+
+            if (rawOperation > Enum.GetValues(typeof(ComparisonOperator)).Length - 1)
+                throw new Exception("The Operation value was outside the bounds of the enum");
+
+            Operation = (ProteinOperation)rawOperation;
         }
     }
 }
