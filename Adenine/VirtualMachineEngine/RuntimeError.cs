@@ -19,7 +19,7 @@ namespace Adenine.VirtualMachineEngine
 
         public override string ToString()
         {
-            return Trace.ToString() + ": " + Message;
+            return "Error was throwed " + Trace.ToString() + ": " + Message;
         }
     }
 }

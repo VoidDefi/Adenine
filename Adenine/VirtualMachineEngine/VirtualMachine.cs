@@ -21,7 +21,7 @@ namespace Adenine.VirtualMachineEngine
 
         private static TraceBlock CurrentBlock { get; set; }
 
-        public static int StepTimeMs { get; set; } = 60;
+        public static int StepTimeMs { get; set; } = 1;
 
         public static void Setup(Cell cell, DebugData debugData)
         {
@@ -52,6 +52,8 @@ namespace Adenine.VirtualMachineEngine
 
                     bool resultFlag = false;
                     LogicOperator logicOperator = LogicOperator.None;
+
+                    CurrentBlock = TraceBlock.Condition;
 
                     for (int j = 0; j < gen.Conditions.Length; j++)
                     {
@@ -122,6 +124,8 @@ namespace Adenine.VirtualMachineEngine
 
                     if (resultFlag)
                     {
+                        CurrentBlock = TraceBlock.Result;
+
                         for (int j = 0; j < gen.Results.Length; j++)
                         {
                             Result result = gen.Results[j];
@@ -195,9 +199,23 @@ namespace Adenine.VirtualMachineEngine
                                         Cell.Proteins[result.ProteinIndex] *= value;
                                         break;
                                     case ProteinOperation.Divide:
+
+                                        if (value == 0)
+                                        {
+                                            Throw<DivisionByZeroRuntimeError>();
+                                            return;
+                                        }
+
                                         Cell.Proteins[result.ProteinIndex] /= value;
                                         break;
                                     case ProteinOperation.DivideByModule:
+
+                                        if (value == 0)
+                                        {
+                                            Throw<DivisionByZeroRuntimeError>();
+                                            return;
+                                        }
+
                                         Cell.Proteins[result.ProteinIndex] %= value;
                                         break;
                                 }
@@ -210,6 +228,7 @@ namespace Adenine.VirtualMachineEngine
 
         private static void Throw(RuntimeError error)
         {
+            Console.WriteLine();
             Console.WriteLine(error.ToString());
             IsProgramStarted = false;
         }

@@ -20,7 +20,7 @@ namespace Adenine.VirtualMachineEngine
 
         public override string ToString()
         {
-            return $"In {GenName}/{Block}";
+            return $"in {GenName}/{Block.ToString().ToLower()}";
         }
     }
 

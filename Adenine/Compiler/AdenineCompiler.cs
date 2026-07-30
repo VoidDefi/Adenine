@@ -870,22 +870,23 @@ namespace Adenine.Compiler
                                     (exist && (protein == null || operation != null || value != null)) ||
                                     logicOperator != LogicOperator.None)
                                 {
-                                    errors.Add(new NotAvailableInContextError(token.LineNumber));
+                                    //errors.Add(new NotAvailableInContextError(token.LineNumber));
                                 }
 
-                                /*
+                                
                                 if (exist)
                                 {
-                                    if (protein == null || operation != null || value != null || logicOperator != LogicOperator.None)
+                                    if (protein == null || operation != null || value != null || variable != null || logicOperator != LogicOperator.None)
                                     {
                                         errors.Add(new NotAvailableInContextError(token.LineNumber));
                                     }
                                 }
 
-                                else if (protein == null || operation == null || value == null || logicOperator != LogicOperator.None)
+                                else if (protein == null || operation == null || logicOperator != LogicOperator.None || 
+                                        (value == null && variable == null) || (variable != null && value != null))
                                 {
                                     errors.Add(new NotAvailableInContextError(token.LineNumber));
-                                }*/
+                                }
 
                                 else logicOperator = token.Text == ReservedNames.And ? LogicOperator.And : LogicOperator.Or;
                             }
