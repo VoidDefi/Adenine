@@ -8,16 +8,16 @@ using System.Threading.Tasks;
 
 namespace Adenine.CodeObjects.FunctionalProteins
 {
-    internal class SetCursorX : FunctionalProtein
+    internal class SetCursorYProtein : FunctionalProtein
     {
-        public override string Name => "set-cursor-x";
+        public override string Name => "set-cursor-y";
 
-        public override int Index => 4;
+        public override int Index => 5;
 
         public override void Invoke(float value, ref ProgramRunModifier modifier)
         {
             var position = Console.GetCursorPosition();
-            Console.SetCursorPosition((int)value, position.Top);
+            Console.SetCursorPosition(position.Left, (int)value);
         }
     }
 }

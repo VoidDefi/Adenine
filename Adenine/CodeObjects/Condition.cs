@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Adenine.VirtualMachineEngine;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -49,12 +50,32 @@ namespace Adenine.CodeObjects
         {
             string logic = LogicOperator != LogicOperator.None ? " " + LogicOperator.ToString().ToLower() : "";
 
-            if (UseProteinValue)
+            string protein = $"p#{ProteinIndex}";
+
+            if (VirtualMachine.IsProgramStarted)
             {
-                return $"p#{ProteinIndex} {ComparisonOperatorParser.ToString(Operator)} p#{ComparingProtein}{logic}";
+                if (ProteinIndex >= 0 && ProteinIndex < VirtualMachine.DebugData.ProteinNames.Length)
+                {
+                    protein += " " + VirtualMachine.DebugData.ProteinNames[ProteinIndex];
+                }
             }
 
-            return $"p#{ProteinIndex} {ComparisonOperatorParser.ToString(Operator)} {Value}{logic}";
+            if (UseProteinValue)
+            {
+                string comparingProtein = $"p#{ComparingProtein}";
+
+                if (VirtualMachine.IsProgramStarted)
+                {
+                    if (ComparingProtein >= 0 && ComparingProtein < VirtualMachine.DebugData.ProteinNames.Length)
+                    {
+                        comparingProtein += " " + VirtualMachine.DebugData.ProteinNames[ComparingProtein];
+                    }
+                }
+
+                return $"{protein} {ComparisonOperatorParser.ToString(Operator)} {comparingProtein}{logic}";
+            }
+
+            return $"{protein} {ComparisonOperatorParser.ToString(Operator)} {Value}{logic}";
         }
 
         public byte[] Serialize()

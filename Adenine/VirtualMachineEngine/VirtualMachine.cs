@@ -4,6 +4,7 @@ using Adenine.VirtualMachineEngine.RuntimeErrors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -51,6 +52,11 @@ namespace Adenine.VirtualMachineEngine
             {
                 for (int i = 0; i < Cell.Gens.Length; i++)
                 {
+                    if (i == 1)
+                    {
+
+                    }
+
                     if (StepTimeMs > 0)
                         Thread.Sleep(StepTimeMs);
 
@@ -65,10 +71,10 @@ namespace Adenine.VirtualMachineEngine
                     CurrentBlock = TraceBlock.Condition;
 
                     Logging.Program.EmitCurrentGen();
-
                     Logging.Program.EmitCurrentProteinsState();
-
                     Logging.Program.EmitLine("condition: ");
+
+                    bool needGoto = false;
 
                     for (int j = 0; j < gen.Conditions.Length; j++)
                     {
@@ -87,7 +93,7 @@ namespace Adenine.VirtualMachineEngine
                         if (condition.UseProteinValue)
                         {
                             if (IsValidProteinIndex(condition.ComparingProtein))
-                            { 
+                            {
                                 Throw<ProteinIndexOutOfRangeRuntimeError>();
                                 return;
                             }
@@ -182,12 +188,24 @@ namespace Adenine.VirtualMachineEngine
 
                                     if (modifier.NeedGoto)
                                     {
+                                        int index = modifier.GotoIndex;
 
+                                        if (index < 0 || index >= Cell.Gens.Length)
+                                        {
+                                            Throw<GenIndexOutOfRangeRuntimeError>();
+                                            return;
+                                        }
+
+                                        needGoto = true;
+
+                                        i = index;
+                                        GenIndex = index;
+                                        break;
                                     }
                                 }
 
-                                else 
-                                { 
+                                else
+                                {
                                     Throw<NotExistFunctionalProteinRuntimeError>();
                                     return;
                                 }
@@ -207,7 +225,7 @@ namespace Adenine.VirtualMachineEngine
                                         Cell.Proteins[result.ProteinIndex] = value;
                                         break;
                                     case ProteinOperation.Add:
-                                        Cell.Proteins[result.ProteinIndex] += value; 
+                                        Cell.Proteins[result.ProteinIndex] += value;
                                         break;
                                     case ProteinOperation.Subtract:
                                         Cell.Proteins[result.ProteinIndex] -= value;
@@ -238,6 +256,12 @@ namespace Adenine.VirtualMachineEngine
                                 }
                             }
                         }
+                    }
+
+                    if (needGoto)
+                    {
+                        i--;
+                        continue;
                     }
                 }
 
