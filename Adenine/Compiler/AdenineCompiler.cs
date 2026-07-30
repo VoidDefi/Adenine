@@ -447,6 +447,8 @@ namespace Adenine.Compiler
 
             //Check names 
 
+            var functionalProteins = FunctionalProteinsRegistry.Proteins.ToList();
+
             List<Token> resultProteins = new();
             List<Token> actionsProteins = new();
             List<Token> inputProteins = new();
@@ -517,7 +519,7 @@ namespace Adenine.Compiler
 
             foreach (Token token in actionsProteins)
             {
-                if (FunctionalProteinsRegistry.Proteins.FindIndex(p => p.Name == token.Text) < 0)
+                if (functionalProteins.FindIndex(p => p.Value.Name == token.Text) < 0)
                 {
                     errors.Add(new ActionNotExistError(token.LineNumber));
                 }
@@ -642,11 +644,12 @@ namespace Adenine.Compiler
 
                     if (action)
                     {
-                        var actionProtein = FunctionalProteinsRegistry.Proteins.FirstOrDefault(p => p.Name == proteinName, null);
+                        int actionIndex = functionalProteins.FindIndex(p => p.Value.Name == proteinName);
 
-                        if (actionProtein == null)
+                        if (actionIndex < 0)
                             throw new Exception();
 
+                        var actionProtein = functionalProteins[actionIndex].Value;
                         proteinIndex = actionProtein.Index;
                     }
 
@@ -864,11 +867,25 @@ namespace Adenine.Compiler
                             else if (token.Text == ReservedNames.And || token.Text == ReservedNames.Or)
                             {
                                 if ((!exist && (protein == null || operation == null || value == null)) ||
-                                    (exist && (protein == null || operation != null || value == null)) ||
+                                    (exist && (protein == null || operation != null || value != null)) ||
                                     logicOperator != LogicOperator.None)
                                 {
                                     errors.Add(new NotAvailableInContextError(token.LineNumber));
                                 }
+
+                                /*
+                                if (exist)
+                                {
+                                    if (protein == null || operation != null || value != null || logicOperator != LogicOperator.None)
+                                    {
+                                        errors.Add(new NotAvailableInContextError(token.LineNumber));
+                                    }
+                                }
+
+                                else if (protein == null || operation == null || value == null || logicOperator != LogicOperator.None)
+                                {
+                                    errors.Add(new NotAvailableInContextError(token.LineNumber));
+                                }*/
 
                                 else logicOperator = token.Text == ReservedNames.And ? LogicOperator.And : LogicOperator.Or;
                             }

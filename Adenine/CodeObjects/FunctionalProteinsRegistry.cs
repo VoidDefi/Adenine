@@ -11,7 +11,9 @@ namespace Adenine.CodeObjects
 {
     internal static class FunctionalProteinsRegistry
     {
-        public static List<FunctionalProtein> Proteins { get; private set; }
+        //public static List<FunctionalProtein> Proteins { get; private set; }
+
+        public static Dictionary<int, FunctionalProtein> Proteins { get; private set; }
 
         public static void Setup()
         {
@@ -39,7 +41,12 @@ namespace Adenine.CodeObjects
                 }
             }
 
-            Proteins = proteins;
+            Proteins = new();
+
+            for (int i = 0; i < proteins.Count; i++)
+            {
+                Proteins.Add(proteins[i].Index, proteins[i]);
+            }
         }
     }
 }
