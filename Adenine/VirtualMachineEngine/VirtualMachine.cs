@@ -17,7 +17,7 @@ namespace Adenine.VirtualMachineEngine
 
         public static bool IsProgramStarted { get; private set; }
 
-        private static int GenIndex { get; set; }
+        public static int GenIndex { get; private set; }
 
         private static TraceBlock CurrentBlock { get; set; }
 
@@ -40,12 +40,18 @@ namespace Adenine.VirtualMachineEngine
 
             IsProgramStarted = true;
 
+            Logging.Program.Start();
+
+            int counter = 0;
+
             while (IsProgramStarted)
             {
                 for (int i = 0; i < Cell.Gens.Length; i++)
                 {
                     if (StepTimeMs > 0)
                         Thread.Sleep(StepTimeMs);
+
+                    Logging.Program.EmitLine($"Main iterate: {counter}");
 
                     Gen gen = Cell.Gens[i];
                     GenIndex = i;
@@ -54,6 +60,12 @@ namespace Adenine.VirtualMachineEngine
                     LogicOperator logicOperator = LogicOperator.None;
 
                     CurrentBlock = TraceBlock.Condition;
+
+                    Logging.Program.EmitCurrentGen();
+
+                    Logging.Program.EmitCurrentProteinsState();
+
+                    Logging.Program.EmitLine("condition: ");
 
                     for (int j = 0; j < gen.Conditions.Length; j++)
                     {
@@ -124,6 +136,8 @@ namespace Adenine.VirtualMachineEngine
 
                     if (resultFlag)
                     {
+                        Logging.Program.EmitLine("result: ");
+
                         CurrentBlock = TraceBlock.Result;
 
                         for (int j = 0; j < gen.Results.Length; j++)
@@ -223,6 +237,14 @@ namespace Adenine.VirtualMachineEngine
                         }
                     }
                 }
+
+                counter++;
+
+                if (Console.CapsLock)
+                {
+                    IsProgramStarted = false;
+                    return;
+                }
             }
         }
 
@@ -230,6 +252,8 @@ namespace Adenine.VirtualMachineEngine
         {
             Console.WriteLine();
             Console.WriteLine(error.ToString());
+            Logging.Program.EmitError(error);
+
             IsProgramStarted = false;
         }
 

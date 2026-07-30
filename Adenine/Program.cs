@@ -98,6 +98,8 @@ namespace Adenine
             VirtualMachine.Setup(cell, debugData);
             VirtualMachine.Start();
 
+            Logging.Program.Save();
+
             Console.ReadLine();
         }
     }

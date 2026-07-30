@@ -1,4 +1,6 @@
-﻿using Adenine.Compiler;
+﻿using Adenine.CodeObjects;
+using Adenine.Compiler;
+using Adenine.VirtualMachineEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -80,6 +82,104 @@ namespace Adenine
             string filePath = "treeLog.txt";
 
             File.WriteAllText(filePath, stringBuilder.ToString());
+        }
+
+        public static class Program
+        {
+            static StringBuilder CurrentSession { get; set; }
+
+            public static void Start()
+            {
+                if (!VirtualMachine.IsProgramStarted)
+                    return;
+
+                CurrentSession = new();
+            }
+
+            public static void Save()
+            {
+                if (CurrentSession == null) return;
+
+                File.WriteAllText("programLogs.txt", CurrentSession.ToString());
+
+                CurrentSession = null;
+            }
+
+            public static void EmitText(string text)
+            {
+                if (CurrentSession == null) return;
+
+                CurrentSession.Append(text);
+            }
+
+            public static void EmitNewLine() => EmitText("\r\n");
+
+            public static void EmitLine(string newLine) 
+            {
+                EmitText(newLine);
+                EmitNewLine();
+            } 
+
+            public static void EmitError(RuntimeError error) => EmitLine(error.ToString());
+
+            public static void EmitCurrentProteinsState()
+            {
+                if (CurrentSession == null) return;
+
+                Cell cell = VirtualMachine.Cell;
+                DebugData debugData = VirtualMachine.DebugData;
+
+                if (cell?.Proteins == null) return;
+
+                EmitNewLine();
+
+                for (int i = 0; i < cell.Proteins.Length; i++)
+                {
+                    float value = cell.Proteins[i];
+
+                    string name = $"p#{i}";
+
+                    if (debugData?.ProteinNames != null)
+                    {
+                        if (i < debugData.ProteinNames.Length)
+                        {
+                            name = debugData.ProteinNames[i];
+                        }
+                    }
+
+                    EmitLine($"{name} = {value}");
+                }
+
+                EmitNewLine();
+            }
+
+            public static void EmitCurrentGen()
+            {
+                if (CurrentSession == null) return;
+
+                Cell cell = VirtualMachine.Cell;
+                DebugData debugData = VirtualMachine.DebugData;
+
+                if (cell?.Gens == null) return;
+
+                if (VirtualMachine.GenIndex < 0 || VirtualMachine.GenIndex >= cell.Gens.Length)
+                    return;
+
+                EmitNewLine();
+
+                string name = $"g#{VirtualMachine.GenIndex}";
+
+                if (debugData?.GenNames != null)
+                {
+                    if (VirtualMachine.GenIndex < debugData.GenNames.Length)
+                    {
+                        name = debugData.GenNames[VirtualMachine.GenIndex];
+                    }
+                }
+
+                EmitLine($"Current Gen: {name}");
+                EmitNewLine();
+            }
         }
     }
 }

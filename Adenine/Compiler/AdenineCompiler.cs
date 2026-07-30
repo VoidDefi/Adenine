@@ -829,7 +829,7 @@ namespace Adenine.Compiler
                             if (operation != null &&
                                 !ReservedNames.NameExist(token.Text) &&
                                 !ReservedSymbols.SymbolExist(token.Text) &&
-                                !float.TryParse(token.Text, out _))
+                                !float.TryParse(token.Text.Replace(',', '.'), out _))
                             {
                                 if (exist || protein == null || value != null || variable != null)
                                 {
@@ -854,7 +854,7 @@ namespace Adenine.Compiler
                                 }
                             }
 
-                            else if (float.TryParse(token.Text, out float parsedValue))
+                            else if (float.TryParse(token.Text.Replace(',', '.'), out float parsedValue))
                             {
                                 if (exist || protein == null || operation == null || variable != null)
                                 {
@@ -1100,7 +1100,7 @@ namespace Adenine.Compiler
                             //protein name
                             else if (!ReservedNames.NameExist(token.Text) &&
                                      !ReservedSymbols.SymbolExist(token.Text) &&
-                                     !float.TryParse(token.Text, out _) && branchDeep <= 0)
+                                     !float.TryParse(token.Text.Replace(',', '.'), out _) && branchDeep <= 0)
                             {
                                 if (operation == null || protein != null || value != null ||
                                     inputVar != null || translateMode != null || next)
@@ -1138,7 +1138,7 @@ namespace Adenine.Compiler
                                     {
                                         Token firstToken = branch[1].Token;
 
-                                        if (float.TryParse(firstToken.Text, out float parsedValue))
+                                        if (float.TryParse(firstToken.Text.Replace(',', '.'), out float parsedValue))
                                         {
                                             value = parsedValue;
                                         }
