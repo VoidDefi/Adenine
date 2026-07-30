@@ -21,7 +21,7 @@ namespace Adenine.VirtualMachineEngine
 
         private static TraceBlock CurrentBlock { get; set; }
 
-        public static int StepTimeMs { get; set; } = 1;
+        public static int StepTimeMs { get; set; } = 0;
 
         public static void Setup(Cell cell, DebugData debugData)
         {
@@ -257,7 +257,7 @@ namespace Adenine.VirtualMachineEngine
             IsProgramStarted = false;
         }
 
-        private static void Throw<T>() where T : RuntimeError
+        public static void Throw<T>() where T : RuntimeError
         {
             Throw(Activator.CreateInstance(typeof(T), [GetTrace()]) as RuntimeError);
         }
