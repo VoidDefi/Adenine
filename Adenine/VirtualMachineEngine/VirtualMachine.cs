@@ -23,6 +23,8 @@ namespace Adenine.VirtualMachineEngine
 
         public static int StepTimeMs { get; set; } = 0;
 
+        public static bool LoggingActivated { get; set; } = false;
+
         public static void Setup(Cell cell, DebugData debugData)
         {
             if (cell == null) throw new ArgumentNullException(nameof(cell));
@@ -40,6 +42,7 @@ namespace Adenine.VirtualMachineEngine
 
             IsProgramStarted = true;
 
+            if (LoggingActivated)
             Logging.Program.Start();
 
             int counter = 0;
