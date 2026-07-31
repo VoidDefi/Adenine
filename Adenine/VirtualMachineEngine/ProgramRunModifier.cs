@@ -14,6 +14,8 @@ namespace Adenine.VirtualMachineEngine
 
         public int GotoIndex { get; private set; } = -1;
 
+        public bool ForcedlyExecuteJumpedGen { get; private set; } = false;
+
         public ProgramRunModifier(bool needEnd)
         {
             NeedEnd = needEnd;
@@ -21,11 +23,12 @@ namespace Adenine.VirtualMachineEngine
             GotoIndex = -1;
         }
 
-        public ProgramRunModifier(int gotoIndex)
+        public ProgramRunModifier(int gotoIndex, bool forcedlyExecuteJumpedGen)
         {
             NeedEnd = false;
             NeedGoto = true;
             GotoIndex = gotoIndex;
+            ForcedlyExecuteJumpedGen = forcedlyExecuteJumpedGen;
         }
     }
 }
