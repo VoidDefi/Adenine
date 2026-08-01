@@ -18,7 +18,27 @@ namespace Adenine.CodeObjects.FunctionalProteins
         {
             int index = (int)value;
 
-            modifier = new ProgramRunModifier(index, false);
+            if (index < 0 || index >= VirtualMachine.Cell.Gens.Length)
+            {
+                VirtualMachine.Throw<GenIndexOutOfRangeRuntimeError>();
+                modifier = new ProgramRunModifier(true);
+                return;
+            }
+
+            Gen gen = VirtualMachine.Cell.Gens[index];
+
+            bool flag = VirtualMachine.ExecuteCondition(gen, out bool errorThrowed);
+
+            if (errorThrowed)
+            {
+                modifier = new ProgramRunModifier(true);
+                return;
+            }
+
+            if (flag) 
+            {
+                modifier = new ProgramRunModifier(index, true);
+            } 
         }
     }
 }

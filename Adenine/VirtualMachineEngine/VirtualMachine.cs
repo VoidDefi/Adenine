@@ -73,9 +73,6 @@ namespace Adenine.VirtualMachineEngine
                     Gen gen = Cell.Gens[i];
                     GenIndex = i;
 
-                    bool resultFlag = false;
-                    LogicOperator logicOperator = LogicOperator.None;
-
                     CurrentBlock = TraceBlock.Condition;
 
                     Logging.Program.EmitCurrentGen();
@@ -84,74 +81,13 @@ namespace Adenine.VirtualMachineEngine
 
                     bool needGoto = false;
 
+                    bool resultFlag = false;
+
                     if (!forcedlyExecute)
                     {
-                        for (int j = 0; j < gen.Conditions.Length; j++)
-                        {
-                            Condition condition = gen.Conditions[j];
+                        resultFlag = ExecuteCondition(gen, out bool hasError);
 
-                            if (IsValidProteinIndex(condition.ProteinIndex))
-                            {
-                                Throw<ProteinIndexOutOfRangeRuntimeError>();
-                                return;
-                            }
-
-                            float proteinValue = Cell.Proteins[condition.ProteinIndex];
-
-                            float comparingValue = condition.Value;
-
-                            if (condition.UseProteinValue)
-                            {
-                                if (IsValidProteinIndex(condition.ComparingProtein))
-                                {
-                                    Throw<ProteinIndexOutOfRangeRuntimeError>();
-                                    return;
-                                }
-
-                                comparingValue = Cell.Proteins[condition.ComparingProtein];
-                            }
-
-                            bool flag = false;
-
-                            //comparing
-                            switch (condition.Operator)
-                            {
-                                case ComparisonOperator.Equal:
-                                    flag = proteinValue == comparingValue;
-                                    break;
-                                case ComparisonOperator.NotEqual:
-                                    flag = proteinValue != comparingValue;
-                                    break;
-                                case ComparisonOperator.Greater:
-                                    flag = proteinValue > comparingValue;
-                                    break;
-                                case ComparisonOperator.Less:
-                                    flag = proteinValue < comparingValue;
-                                    break;
-                                case ComparisonOperator.LessOrEqual:
-                                    flag = proteinValue <= comparingValue;
-                                    break;
-                                case ComparisonOperator.GreaterOrEqual:
-                                    flag = proteinValue >= comparingValue;
-                                    break;
-                            }
-
-                            if (logicOperator == LogicOperator.None)
-                            {
-                                resultFlag = flag;
-                            }
-
-                            else
-                            {
-                                if (logicOperator == LogicOperator.And)
-                                    resultFlag = resultFlag && flag;
-
-                                else if (logicOperator == LogicOperator.Or)
-                                    resultFlag = resultFlag || flag;
-                            }
-
-                            logicOperator = condition.LogicOperator;
-                        }
+                        if (hasError) return;
                     }
 
                     if (resultFlag || forcedlyExecute)
@@ -301,6 +237,84 @@ namespace Adenine.VirtualMachineEngine
                     return;
                 }*/
             }
+        }
+
+        public static bool ExecuteCondition(Gen gen, out bool errorThrowed)
+        {
+            bool resultFlag = false;
+            LogicOperator logicOperator = LogicOperator.None;
+
+            for (int j = 0; j < gen.Conditions.Length; j++)
+            {
+                Condition condition = gen.Conditions[j];
+
+                if (IsValidProteinIndex(condition.ProteinIndex))
+                {
+                    Throw<ProteinIndexOutOfRangeRuntimeError>();
+                    errorThrowed = true;
+                    return false;
+                }
+
+                float proteinValue = Cell.Proteins[condition.ProteinIndex];
+
+                float comparingValue = condition.Value;
+
+                if (condition.UseProteinValue)
+                {
+                    if (IsValidProteinIndex(condition.ComparingProtein))
+                    {
+                        Throw<ProteinIndexOutOfRangeRuntimeError>();
+                        errorThrowed = true;
+                        return false;
+                    }
+
+                    comparingValue = Cell.Proteins[condition.ComparingProtein];
+                }
+
+                bool flag = false;
+
+                //comparing
+                switch (condition.Operator)
+                {
+                    case ComparisonOperator.Equal:
+                        flag = proteinValue == comparingValue;
+                        break;
+                    case ComparisonOperator.NotEqual:
+                        flag = proteinValue != comparingValue;
+                        break;
+                    case ComparisonOperator.Greater:
+                        flag = proteinValue > comparingValue;
+                        break;
+                    case ComparisonOperator.Less:
+                        flag = proteinValue < comparingValue;
+                        break;
+                    case ComparisonOperator.LessOrEqual:
+                        flag = proteinValue <= comparingValue;
+                        break;
+                    case ComparisonOperator.GreaterOrEqual:
+                        flag = proteinValue >= comparingValue;
+                        break;
+                }
+
+                if (logicOperator == LogicOperator.None)
+                {
+                    resultFlag = flag;
+                }
+
+                else
+                {
+                    if (logicOperator == LogicOperator.And)
+                        resultFlag = resultFlag && flag;
+
+                    else if (logicOperator == LogicOperator.Or)
+                        resultFlag = resultFlag || flag;
+                }
+
+                logicOperator = condition.LogicOperator;
+            }
+
+            errorThrowed = false;
+            return resultFlag;
         }
 
         private static void Throw(RuntimeError error)
