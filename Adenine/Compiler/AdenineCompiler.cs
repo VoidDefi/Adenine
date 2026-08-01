@@ -1218,7 +1218,8 @@ namespace Adenine.Compiler
 
                                 else
                                 {
-                                    throw new Exception();
+                                    errors.Add(new NotReadCurrentResultError(token.LineNumber));
+                                    //throw new Exception();
                                 }
 
                                 operation = null;
