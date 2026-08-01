@@ -26,6 +26,10 @@ namespace Adenine
 
             if (mode == "c") Compile();
             if (mode == "r") Run();
+            if (mode == "t")
+            {
+                Compile(); Run();
+            }
 
             /*if (args == null || args.Length <= 0)
             {

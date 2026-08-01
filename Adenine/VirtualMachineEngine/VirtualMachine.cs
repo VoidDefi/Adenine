@@ -26,7 +26,7 @@ namespace Adenine.VirtualMachineEngine
 
         public static bool LoggingActivated { get; set; } = false;
 
-        public static int EntryPoint { get; set; } = -1;
+        public static EntryPoint CurrentEntryPoint { get; set; } = new EntryPoint();
 
         public static long IterationCounter { get; set; } = 0;
 
@@ -41,7 +41,7 @@ namespace Adenine.VirtualMachineEngine
 
                 GenIndex = 0;
                 CurrentBlock = 0;
-                EntryPoint = -1;
+                CurrentEntryPoint.Clear();
                 IterationCounter = 0;
             }
         }
@@ -57,10 +57,11 @@ namespace Adenine.VirtualMachineEngine
 
 
             bool forcedlyExecute = false;
+            int instructionStartIndex = 0;
 
             while (IsProgramStarted)
             {
-                EntryPoint = -1;
+                CurrentEntryPoint.Clear();
 
                 for (int i = 0; i < Cell.Gens.Length; i++)
                 {
@@ -161,8 +162,9 @@ namespace Adenine.VirtualMachineEngine
 
                         CurrentBlock = TraceBlock.Result;
 
-                        for (int j = 0; j < gen.Results.Length; j++)
+                        for (int j = instructionStartIndex; j < gen.Results.Length; j++)
                         {
+                            if (instructionStartIndex > 0) instructionStartIndex = 0;
                             Result result = gen.Results[j];
 
                             float value = result.Value;
@@ -200,11 +202,17 @@ namespace Adenine.VirtualMachineEngine
 
                                     if (modifier.NeedGoto)
                                     {
-                                        int index = modifier.GotoIndex;
+                                        int index = modifier.GotoEndPoint.gen;
+                                        int instructionIndex = modifier.GotoEndPoint.instruction;
 
                                         if (index < 0 || index >= Cell.Gens.Length)
                                         {
                                             Throw<GenIndexOutOfRangeRuntimeError>();
+                                            return;
+                                        }
+                                        if (instructionIndex >= Cell.Gens[index].Results.Length)
+                                        {
+                                            Throw<DivisionByZeroRuntimeError>();
                                             return;
                                         }
 
@@ -212,10 +220,14 @@ namespace Adenine.VirtualMachineEngine
                                         forcedlyExecute = modifier.ForcedlyExecuteJumpedGen;
 
                                         if (modifier.SaveEntryPoint)
-                                            EntryPoint = i;
+                                        {
+                                            CurrentEntryPoint.gen = i;
+                                            CurrentEntryPoint.instruction = j;
+                                        }
 
                                         i = index;
                                         GenIndex = index;
+                                        if (instructionIndex >= 0) instructionStartIndex = instructionIndex;
                                         break;
                                     }
                                 }

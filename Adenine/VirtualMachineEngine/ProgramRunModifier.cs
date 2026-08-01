@@ -12,7 +12,7 @@ namespace Adenine.VirtualMachineEngine
 
         public bool NeedGoto { get; private set; } = false;
 
-        public int GotoIndex { get; private set; } = -1;
+        public EntryPoint GotoEndPoint { get; private set; } = new();
 
         public bool ForcedlyExecuteJumpedGen { get; private set; } = false;
 
@@ -22,16 +22,17 @@ namespace Adenine.VirtualMachineEngine
         {
             NeedEnd = needEnd;
             NeedGoto = false;
-            GotoIndex = -1;
+            GotoEndPoint.Clear();
             ForcedlyExecuteJumpedGen = false;
             SaveEntryPoint = true;
         }
 
-        public ProgramRunModifier(int gotoIndex, bool forcedlyExecute, bool saveEntryPoint = true)
+        public ProgramRunModifier(int gotoIndex, bool forcedlyExecute, bool saveEntryPoint = true, int gotoIndexProtein = -1)
         {
             NeedEnd = false;
             NeedGoto = true;
-            GotoIndex = gotoIndex;
+            GotoEndPoint.gen = gotoIndex;
+            GotoEndPoint.instruction = gotoIndexProtein;
             ForcedlyExecuteJumpedGen = forcedlyExecute;
             SaveEntryPoint = saveEntryPoint;
         }
