@@ -107,13 +107,28 @@ namespace Adenine.VirtualMachineEngine
 
                             if (result.UseProteinValue)
                             {
-                                if (IsValidProteinIndex(result.InputProtein))
+                                if (IsInvalidProteinIndex(result.InputProtein))
                                 {
                                     Throw<ProteinIndexOutOfRangeRuntimeError>();
                                     return;
                                 }
 
-                                value = Cell.Proteins[result.InputProtein];
+                                if (result.GetValueFrom)
+                                {
+                                    int index = (int)Cell.Proteins[result.InputProtein];
+
+                                    if (IsInvalidProteinIndex(index))
+                                    {
+                                        Throw<ProteinIndexOutOfRangeRuntimeError>();
+                                        return;
+                                    }
+
+                                    value = Cell.Proteins[index];
+                                }
+                                else 
+                                {
+                                    value = Cell.Proteins[result.InputProtein];
+                                } 
                             }
 
                             if (result.Action)
@@ -177,7 +192,7 @@ namespace Adenine.VirtualMachineEngine
 
                             else
                             {
-                                if (IsValidProteinIndex(result.ProteinIndex))
+                                if (IsInvalidProteinIndex(result.ProteinIndex))
                                 {
                                     Throw<ProteinIndexOutOfRangeRuntimeError>();
                                     return;
@@ -248,7 +263,7 @@ namespace Adenine.VirtualMachineEngine
             {
                 Condition condition = gen.Conditions[j];
 
-                if (IsValidProteinIndex(condition.ProteinIndex))
+                if (IsInvalidProteinIndex(condition.ProteinIndex))
                 {
                     Throw<ProteinIndexOutOfRangeRuntimeError>();
                     errorThrowed = true;
@@ -261,7 +276,7 @@ namespace Adenine.VirtualMachineEngine
 
                 if (condition.UseProteinValue)
                 {
-                    if (IsValidProteinIndex(condition.ComparingProtein))
+                    if (IsInvalidProteinIndex(condition.ComparingProtein))
                     {
                         Throw<ProteinIndexOutOfRangeRuntimeError>();
                         errorThrowed = true;
@@ -349,7 +364,7 @@ namespace Adenine.VirtualMachineEngine
             return new Trace(genName, CurrentBlock);
         }
 
-        private static bool IsValidProteinIndex(int index)
+        private static bool IsInvalidProteinIndex(int index)
         {
             return index < 0 || index >= Cell.Proteins.Length;
         }

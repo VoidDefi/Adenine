@@ -29,20 +29,20 @@ namespace Adenine.CodeObjects
             1 + //Action
             4 + //ProteinIndex
             4 + //Value
-            4;//+ //InputProtein
-            //1;  //GetValueFrom
+            4 + //InputProtein
+            1;  //GetValueFrom
 
-        public Result(ProteinOperation operation, bool action, int proteinIndex, float value, bool getValueFrom = false)
+        public Result(ProteinOperation operation, bool action, int proteinIndex, float value)
         {
             Operation = operation;
             Action = action;
             ProteinIndex = proteinIndex;
             Value = value;
             InputProtein = -1;
-            GetValueFrom = getValueFrom;
+            GetValueFrom = false;
         }
 
-        public Result(ProteinOperation operation, bool action, int proteinIndex, int inputProtein, bool getValueFrom = false)
+        public Result(ProteinOperation operation, bool action, int proteinIndex, int inputProtein, bool getValueFrom)
         {
             Operation = operation;
             Action = action;
@@ -56,10 +56,11 @@ namespace Adenine.CodeObjects
         {
             string operation = ProteinOperationParser.ToString(Operation);
             string action = Action ? "action " : "";
+            string getValueFrom = GetValueFrom ? " valuefrom" : "";
 
             if (UseProteinValue)
             {
-                return $"{operation} {action}p#{ProteinIndex}(p#{InputProtein})";
+                return $"{operation} {action}p#{ProteinIndex}(p#{InputProtein}{getValueFrom})";
             }
 
             return $"{operation} {action}p#{ProteinIndex}({Value})";
@@ -74,6 +75,7 @@ namespace Adenine.CodeObjects
             bytes.AddRange(BitConverter.GetBytes(ProteinIndex));
             bytes.AddRange(BitConverter.GetBytes(Value));
             bytes.AddRange(BitConverter.GetBytes(InputProtein));
+            bytes.Add((byte)(GetValueFrom ? 1 : 0));
 
             if (bytes.Count != ByteSize)
                 throw new Exception("Invalid size");
@@ -102,6 +104,9 @@ namespace Adenine.CodeObjects
 
             InputProtein = BitConverter.ToInt32(bytes, currentOffset);
             currentOffset += 4;
+
+            GetValueFrom = bytes[currentOffset] > 0;
+            currentOffset += 1;
 
             if (rawOperation > Enum.GetValues(typeof(ComparisonOperator)).Length - 1)
                 throw new Exception("The Operation value was outside the bounds of the enum");

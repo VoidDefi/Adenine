@@ -19,6 +19,8 @@ namespace Adenine.Compiler.NotCompiledObjects
 
         public Token? InputName { get; private set; } = null;
 
+        public bool GetValueFrom { get; private set; } = false;
+
         public NameTranslateMode? TranslateMode { get; private set; } = null;
 
         public NotCompiledResult(ProteinOperation operation, bool action, Token proteinName, float value)
@@ -29,9 +31,10 @@ namespace Adenine.Compiler.NotCompiledObjects
             Value = value;
             InputName = null;
             TranslateMode = null;
+            GetValueFrom = false;
         }
 
-        public NotCompiledResult(ProteinOperation operation, bool action, Token proteinName, Token inputName, NameTranslateMode? translateMode)
+        public NotCompiledResult(ProteinOperation operation, bool action, Token proteinName, Token inputName, NameTranslateMode? translateMode, bool getValueFrom)
         {
             Operation = operation;
             Action = action;
@@ -39,11 +42,14 @@ namespace Adenine.Compiler.NotCompiledObjects
             Value = null;
             InputName = inputName;
             TranslateMode = translateMode;
+            GetValueFrom = getValueFrom;
         }
 
         public override string ToString()
         {
-            if (InputName == null && TranslateMode == null && Value != null)
+            string getValueFrom = GetValueFrom ? " valuefrom" : "";
+
+            if (InputName == null && TranslateMode == null && Value != null && !GetValueFrom)
             {
                 string action = Action ? "action " : "";
                 string operation = ProteinOperationParser.ToString(Operation);
@@ -58,7 +64,12 @@ namespace Adenine.Compiler.NotCompiledObjects
 
                 string operation = ProteinOperationParser.ToString(Operation);
 
-                return $"{operation} {action}{ProteinName.Text}({InputName.Value.Text}{mode})";
+                if (getValueFrom != "" && mode != "")
+                {
+                    return "error";
+                }
+
+                return $"{operation} {action}{ProteinName.Text}({InputName.Value.Text}{mode}{getValueFrom})";
             }
 
             return "error";

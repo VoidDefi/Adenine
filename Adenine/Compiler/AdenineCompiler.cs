@@ -639,6 +639,7 @@ namespace Adenine.Compiler
                     float? value = result.Value;
                     string? inputName = result.InputName?.Text;
                     NameTranslateMode? translateMode = result.TranslateMode;
+                    bool valueFrom = result.GetValueFrom;
 
                     int proteinIndex = -1;
 
@@ -703,7 +704,7 @@ namespace Adenine.Compiler
 
                             compiledResults[resultBlock.Key].Add
                             (
-                                new Result(operation, action, proteinIndex, (int)varIndex)
+                                new Result(operation, action, proteinIndex, (int)varIndex, valueFrom)
                             );
                         }
                     }
@@ -1028,6 +1029,7 @@ namespace Adenine.Compiler
                 float? value = null;
                 Token? inputVar = null;
                 NameTranslateMode? translateMode = null;
+                bool valueFrom = false;
                 bool next = false;
 
                 int start = 1;
@@ -1149,7 +1151,7 @@ namespace Adenine.Compiler
                                             inputVar = firstToken;
                                         }
 
-                                        //getlink getgen
+                                        //getlink getgen valuefrom
                                         if (branch.Count >= 4)
                                         {
                                             if (value != null)
@@ -1164,6 +1166,9 @@ namespace Adenine.Compiler
 
                                             else if (secondToken.Text == ReservedNames.GetGen)
                                                 translateMode = NameTranslateMode.GetGen;
+
+                                            else if (secondToken.Text == ReservedNames.ValueFrom)
+                                                valueFrom = true;
 
                                             else
                                             {
@@ -1206,7 +1211,8 @@ namespace Adenine.Compiler
                                             action,
                                             protein.Value,
                                             inputVar.Value,
-                                            translateMode
+                                            translateMode,
+                                            valueFrom
                                         ));
                                     }
 
@@ -1228,6 +1234,7 @@ namespace Adenine.Compiler
                                 value = null;
                                 inputVar = null;
                                 translateMode = null;
+                                valueFrom = false;
                                 next = false;
 
                                 if (isEnd) needExit = true;
