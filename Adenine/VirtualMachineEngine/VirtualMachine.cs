@@ -211,7 +211,8 @@ namespace Adenine.VirtualMachineEngine
                                         needGoto = true;
                                         forcedlyExecute = modifier.ForcedlyExecuteJumpedGen;
 
-                                        EntryPoint = i;
+                                        if (modifier.SaveEntryPoint)
+                                            EntryPoint = i;
 
                                         i = index;
                                         GenIndex = index;
