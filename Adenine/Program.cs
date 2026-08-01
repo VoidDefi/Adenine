@@ -26,10 +26,7 @@ namespace Adenine
 
             if (mode == "c") Compile();
             if (mode == "r") Run();
-            if (mode == "t")
-            {
-                Compile(); Run();
-            }
+            if (mode == "t") if (Compile()) Run();
 
             /*if (args == null || args.Length <= 0)
             {
@@ -47,7 +44,7 @@ namespace Adenine
             }*/
         }
 
-        private static void Compile()
+        private static bool Compile()
         {
             string code = File.ReadAllText(CodeFile);
 
@@ -62,6 +59,7 @@ namespace Adenine
                 {
                     Console.WriteLine(errors[i].ToString());
                 }
+                return false;
             }
 
             else
@@ -77,6 +75,8 @@ namespace Adenine
                 byte[] programBytes = ProgramSerializer.Serialize(cell);
                 File.WriteAllBytes(ProgramFile, programBytes);
             }
+
+            return true;
         }
 
         private static void Run()

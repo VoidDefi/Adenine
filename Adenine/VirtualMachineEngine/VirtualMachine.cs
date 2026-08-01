@@ -148,7 +148,7 @@ namespace Adenine.VirtualMachineEngine
                                         }
                                         if (instructionIndex >= Cell.Gens[index].Results.Length)
                                         {
-                                            Throw<DivisionByZeroRuntimeError>();
+                                            Throw<GenIndexOutOfRangeRuntimeError>();
                                             return;
                                         }
 
