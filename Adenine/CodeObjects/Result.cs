@@ -20,6 +20,8 @@ namespace Adenine.CodeObjects
 
         public int InputProtein { get; private set; } = -1;
 
+        public bool GetValueFrom { get; private set; } = false;
+
         public bool UseProteinValue => InputProtein != -1;
 
         public int ByteSize =>
@@ -27,24 +29,27 @@ namespace Adenine.CodeObjects
             1 + //Action
             4 + //ProteinIndex
             4 + //Value
-            4;  //InputProtein
+            4;//+ //InputProtein
+            //1;  //GetValueFrom
 
-        public Result(ProteinOperation operation, bool action, int proteinIndex, float value)
+        public Result(ProteinOperation operation, bool action, int proteinIndex, float value, bool getValueFrom = false)
         {
             Operation = operation;
             Action = action;
             ProteinIndex = proteinIndex;
             Value = value;
             InputProtein = -1;
+            GetValueFrom = getValueFrom;
         }
 
-        public Result(ProteinOperation operation, bool action, int proteinIndex, int inputProtein)
+        public Result(ProteinOperation operation, bool action, int proteinIndex, int inputProtein, bool getValueFrom = false)
         {
             Operation = operation;
             Action = action;
             ProteinIndex = proteinIndex;
             Value = 0;
             InputProtein = inputProtein;
+            GetValueFrom = getValueFrom;
         }
 
         public override string ToString()
