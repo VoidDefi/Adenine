@@ -16,25 +16,28 @@ namespace Adenine.CodeObjects.FunctionalProteins
 
         public override void Invoke(float value, ref ProgramRunModifier modifier)
         {
-            if (VirtualMachine.EntryPoint < 0)
+            if (VirtualMachine.CurrentEntryPoint.gen < 0 || VirtualMachine.CurrentEntryPoint.instruction < 0)
             {
                 VirtualMachine.Throw<EmptyEntryPointRuntimeError>();
             }
 
-            int index = VirtualMachine.EntryPoint + 1;
+            var index = VirtualMachine.CurrentEntryPoint.instruction + 1;
 
-            if (index >= VirtualMachine.Cell.Gens.Length)
+            if (VirtualMachine.CurrentEntryPoint.gen >= 0)
             {
-                modifier = new ProgramRunModifier(0, false, false);
-                VirtualMachine.EntryPoint = -1;
+                if (index >= VirtualMachine.Cell.Gens[VirtualMachine.CurrentEntryPoint.gen].Results.Length)
+                {
+                    modifier = new ProgramRunModifier(VirtualMachine.CurrentEntryPoint.gen, false, false, 0);
+                    VirtualMachine.CurrentEntryPoint.instruction = -1;
 
-                VirtualMachine.IterationCounter++;
+                    VirtualMachine.IterationCounter++;
 
-                return;
+                    return;
+                }
+
+                modifier = new ProgramRunModifier(VirtualMachine.CurrentEntryPoint.gen, false, false, index);
+                VirtualMachine.CurrentEntryPoint.Clear();
             }
-
-            modifier = new ProgramRunModifier(index, false, false);
-            VirtualMachine.EntryPoint = -1;
         }
     }
 }
