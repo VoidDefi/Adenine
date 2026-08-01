@@ -995,6 +995,11 @@ namespace Adenine.Compiler
                             logicOperator = LogicOperator.None;
                         }
                     }
+
+                    if (conditions[genNames[i].Text].Count <= 0)
+                    {
+                        errors.Add(new EmptyConditionOrResultError(tokens[0].LineNumber));
+                    }
                 }
 
                 else if (tokens[0].Text != "{") 
@@ -1252,6 +1257,11 @@ namespace Adenine.Compiler
                                 break;
                             }
                         }
+                    }
+
+                    if (results[genNames[i].Text].Count <= 0)
+                    {
+                        errors.Add(new EmptyConditionOrResultError(currentBranch[0].Token.LineNumber));
                     }
                 }
             }
