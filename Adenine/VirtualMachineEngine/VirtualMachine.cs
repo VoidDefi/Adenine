@@ -26,6 +26,10 @@ namespace Adenine.VirtualMachineEngine
 
         public static bool LoggingActivated { get; set; } = false;
 
+        public static int EntryPoint { get; set; } = -1;
+
+        public static long IterationCounter { get; set; } = 0;
+
         public static void Setup(Cell cell, DebugData debugData)
         {
             if (cell == null) throw new ArgumentNullException(nameof(cell));
@@ -34,6 +38,11 @@ namespace Adenine.VirtualMachineEngine
             {
                 Cell = cell;
                 DebugData = debugData;
+
+                GenIndex = 0;
+                CurrentBlock = 0;
+                EntryPoint = -1;
+                IterationCounter = 0;
             }
         }
 
@@ -46,18 +55,19 @@ namespace Adenine.VirtualMachineEngine
             if (LoggingActivated)
             Logging.Program.Start();
 
-            int counter = 0;
 
             bool forcedlyExecute = false;
 
             while (IsProgramStarted)
             {
+                EntryPoint = -1;
+
                 for (int i = 0; i < Cell.Gens.Length; i++)
                 {
                     if (StepTimeMs > 0)
                         Thread.Sleep(StepTimeMs);
 
-                    Logging.Program.EmitLine($"Main iterate: {counter}");
+                    Logging.Program.EmitLine($"Main iterate: {IterationCounter}");
 
                     Gen gen = Cell.Gens[i];
                     GenIndex = i;
@@ -201,6 +211,8 @@ namespace Adenine.VirtualMachineEngine
                                         needGoto = true;
                                         forcedlyExecute = modifier.ForcedlyExecuteJumpedGen;
 
+                                        EntryPoint = i;
+
                                         i = index;
                                         GenIndex = index;
                                         break;
@@ -268,13 +280,13 @@ namespace Adenine.VirtualMachineEngine
                     }
                 }
 
-                counter++;
+                IterationCounter++;
 
-                if (Console.CapsLock)
+                /*if (Console.CapsLock)
                 {
                     IsProgramStarted = false;
                     return;
-                }
+                }*/
             }
         }
 

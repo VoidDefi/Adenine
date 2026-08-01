@@ -16,19 +16,24 @@ namespace Adenine.VirtualMachineEngine
 
         public bool ForcedlyExecuteJumpedGen { get; private set; } = false;
 
+        public bool SaveEntryPoint { get; private set; } = true;
+
         public ProgramRunModifier(bool needEnd)
         {
             NeedEnd = needEnd;
             NeedGoto = false;
             GotoIndex = -1;
+            ForcedlyExecuteJumpedGen = false;
+            SaveEntryPoint = true;
         }
 
-        public ProgramRunModifier(int gotoIndex, bool forcedlyExecuteJumpedGen)
+        public ProgramRunModifier(int gotoIndex, bool forcedlyExecute, bool saveEntryPoint = true)
         {
             NeedEnd = false;
             NeedGoto = true;
             GotoIndex = gotoIndex;
-            ForcedlyExecuteJumpedGen = forcedlyExecuteJumpedGen;
+            ForcedlyExecuteJumpedGen = forcedlyExecute;
+            SaveEntryPoint = saveEntryPoint;
         }
     }
 }
