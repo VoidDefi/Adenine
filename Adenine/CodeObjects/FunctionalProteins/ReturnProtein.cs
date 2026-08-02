@@ -27,15 +27,25 @@ namespace Adenine.CodeObjects.FunctionalProteins
             {
                 if (index >= VirtualMachine.Cell.Gens[VirtualMachine.CurrentEntryPoint.gen].Results.Length)
                 {
-                    modifier = new ProgramRunModifier(VirtualMachine.CurrentEntryPoint.gen, false, false, 0);
-                    VirtualMachine.CurrentEntryPoint.instruction = -1;
+                    int genIndex = VirtualMachine.CurrentEntryPoint.gen;
 
-                    VirtualMachine.IterationCounter++;
+                    if (genIndex < VirtualMachine.Cell.Gens.Length - 1)
+                    {
+                        modifier = new ProgramRunModifier(genIndex + 1, false, false);
+                    }
 
+                    else
+                    {
+                        modifier = new ProgramRunModifier(0, false, false);
+                        VirtualMachine.IterationCounter++;
+                    }
+
+                    VirtualMachine.CurrentEntryPoint.Clear();
+                    //VirtualMachine.CurrentEntryPoint.instruction = -1;
                     return;
                 }
 
-                modifier = new ProgramRunModifier(VirtualMachine.CurrentEntryPoint.gen, false, false, index);
+                modifier = new ProgramRunModifier(VirtualMachine.CurrentEntryPoint.gen, true, false, index);
                 VirtualMachine.CurrentEntryPoint.Clear();
             }
         }

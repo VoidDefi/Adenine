@@ -100,7 +100,9 @@ namespace Adenine.VirtualMachineEngine
 
                         for (int j = instructionStartIndex; j < gen.Results.Length; j++)
                         {
-                            if (instructionStartIndex > 0) instructionStartIndex = 0;
+                            if (instructionStartIndex > 0) 
+                                instructionStartIndex = 0;
+
                             Result result = gen.Results[j];
 
                             float value = result.Value;
@@ -178,7 +180,10 @@ namespace Adenine.VirtualMachineEngine
 
                                         i = index;
                                         GenIndex = index;
-                                        if (instructionIndex >= 0) instructionStartIndex = instructionIndex;
+
+                                        if (instructionIndex >= 0) 
+                                            instructionStartIndex = instructionIndex;
+
                                         break;
                                     }
                                 }
