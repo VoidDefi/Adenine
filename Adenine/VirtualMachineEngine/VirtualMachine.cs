@@ -246,11 +246,11 @@ namespace Adenine.VirtualMachineEngine
 
                 IterationCounter++;
 
-                /*if (Console.CapsLock)
+                if (Console.CapsLock)
                 {
                     IsProgramStarted = false;
                     return;
-                }*/
+                }
             }
         }
 
