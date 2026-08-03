@@ -15,7 +15,7 @@ namespace Adenine
         private static string DebugDataFile => "program.df";
 
         public static void Main(string[] args)
-        {   
+        {
             ReservedNames.SetupRegistry();
             ReservedSymbols.SetupRegistry();
             FunctionalProteinsRegistry.Setup();
