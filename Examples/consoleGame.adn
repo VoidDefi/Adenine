@@ -1,0 +1,948 @@
+//this game not finished
+
+gen init
+{
+	condition
+	{
+		not exist start
+	}
+
+	result
+	{
+		set start(1) next
+		set anyway(1) next
+		
+		//World array
+		set cell00(0) next set cell01(0) next set cell02(0) next set cell03(0) next set cell04(0) next set cell05(0) next set cell06(0) next set cell07(0) next set cell08(0) next set cell09(0) next
+		set cell10(0) next set cell11(0) next set cell12(0) next set cell13(0) next set cell14(0) next set cell15(0) next set cell16(0) next set cell17(0) next set cell18(0) next set cell19(0) next
+		set cell20(0) next set cell21(0) next set cell22(0) next set cell23(0) next set cell24(0) next set cell25(0) next set cell26(0) next set cell27(0) next set cell28(0) next set cell29(0) next
+		set cell30(0) next set cell31(0) next set cell32(0) next set cell33(0) next set cell34(0) next set cell35(0) next set cell36(0) next set cell37(0) next set cell38(0) next set cell39(0) next
+		set cell40(0) next set cell41(0) next set cell42(0) next set cell43(0) next set cell44(0) next set cell45(0) next set cell46(0) next set cell47(0) next set cell48(0) next set cell49(0) next
+		set cell50(0) next set cell51(0) next set cell52(0) next set cell53(0) next set cell54(0) next set cell55(0) next set cell56(0) next set cell57(0) next set cell58(0) next set cell59(0) next
+		set cell60(0) next set cell61(0) next set cell62(0) next set cell63(0) next set cell64(0) next set cell65(0) next set cell66(0) next set cell67(0) next set cell68(0) next set cell69(0) next
+		set cell70(0) next set cell71(0) next set cell72(0) next set cell73(0) next set cell74(0) next set cell75(0) next set cell76(0) next set cell77(0) next set cell78(0) next set cell79(0) next
+		set cell80(0) next set cell81(0) next set cell82(0) next set cell83(0) next set cell84(0) next set cell85(0) next set cell86(0) next set cell87(0) next set cell88(0) next set cell89(0) next
+		set cell90(0) next set cell91(0) next set cell92(0) next set cell93(0) next set cell94(0) next set cell95(0) next set cell96(0) next set cell97(0) next set cell98(0) next set cell99(0) next
+	
+		//World array params
+		set WORLD-ARRAY-START(cell00 getlink) next
+		set WORLD-ARRAY-END(cell99 getlink) next
+		set WORLD-ARRAY-WIDTH(10) next
+		set WORLD-ARRAY-HAIGHT(10) next
+
+		//Blocks types
+		set FLOOR-TYPE(0) next
+		set WALL-TYPE(1) next
+		set ENTRY-TYPE(2) next
+		set EXIT-TYPE(3) next
+
+		//Chars for objects
+		set PLAYER-CHAR(94) next  // ^
+		set BLOCK-CHAR(98) next   // b
+		set ENEMY-CHAR(110) next  // n
+		set ATTACK-CHAR(97) next  // a
+		set FLOOR-CHAR(46) next   // .
+		set WALL-CHAR(35) next    // #
+		set ENTRY-CHAR(37) next   // %
+		set EXIT1-CHAR(91) next   // [
+		set EXIT2-CHAR(93) next   // ]
+
+		//Colors
+
+		//White
+		set WHITE-R-CHAR0(50) next // 255
+		set WHITE-R-CHAR1(53) next
+		set WHITE-R-CHAR2(53) next
+		set WHITE-G-CHAR0(50) next // 255
+		set WHITE-G-CHAR1(53) next
+		set WHITE-G-CHAR2(53) next
+		set WHITE-B-CHAR0(50) next // 255
+		set WHITE-B-CHAR1(53) next
+		set WHITE-B-CHAR2(53) next
+
+		//Gray
+		set GRAY-R-CHAR0(49) next // 128
+		set GRAY-R-CHAR1(50) next
+		set GRAY-R-CHAR2(56) next
+		set GRAY-G-CHAR0(49) next // 128
+		set GRAY-G-CHAR1(50) next
+		set GRAY-G-CHAR2(56) next
+		set GRAY-B-CHAR0(49) next // 128
+		set GRAY-B-CHAR1(50) next
+		set GRAY-B-CHAR2(56) next
+
+		//Red
+		set RED-R-CHAR0(50) next // 255
+		set RED-R-CHAR1(53) next
+		set RED-R-CHAR2(53) next
+		set RED-G-CHAR0(48) next // 0
+		set RED-G-CHAR1(48) next
+		set RED-G-CHAR2(48) next
+		set RED-B-CHAR0(48) next // 0
+		set RED-B-CHAR1(48) next
+		set RED-B-CHAR2(48) next
+
+		//Yellow
+		set YELLOW-R-CHAR0(50) next // 255
+		set YELLOW-R-CHAR1(53) next
+		set YELLOW-R-CHAR2(53) next
+		set YELLOW-G-CHAR0(50) next // 255
+		set YELLOW-G-CHAR1(53) next
+		set YELLOW-G-CHAR2(53) next
+		set YELLOW-B-CHAR0(48) next // 0
+		set YELLOW-B-CHAR1(48) next
+		set YELLOW-B-CHAR2(48) next
+
+		//Dark yellow
+		set DARK-YELLOW-R-CHAR0(49) next // 128
+		set DARK-YELLOW-R-CHAR1(50) next
+		set DARK-YELLOW-R-CHAR2(56) next
+		set DARK-YELLOW-G-CHAR0(49) next // 128
+		set DARK-YELLOW-G-CHAR1(50) next
+		set DARK-YELLOW-G-CHAR2(56) next
+		set DARK-YELLOW-B-CHAR0(48) next // 0
+		set DARK-YELLOW-B-CHAR1(48) next
+		set DARK-YELLOW-B-CHAR2(48) next
+
+		//Colors params
+		set WHITE-START(WHITE-R-CHAR0 getlink) next
+		set GRAY-START(GRAY-R-CHAR0 getlink) next
+		set RED-START(RED-R-CHAR0 getlink) next
+		set YELLOW-START(YELLOW-R-CHAR0 getlink) next
+		set DARK-YELLOW-START(DARK-YELLOW-R-CHAR0 getlink) next
+
+		//Keys binds
+		set UP-KEY(119) next       // w
+		set DOWN-KEY(115) next     // s
+		set LEFT-KEY(97) next      // a
+		set RIGHT-KEY(100) next    // d
+		set ATTACK-KEY(113) next   // q
+		set BLOCK-KEY(120) next    // x
+		set INTERACT-KEY(101) next // e
+
+		//Player stats
+		set player-x(4) next
+		set player-y(4) next
+		set player-life(5) next
+		set player-max-life(5) next
+		set player-lavel(0) next
+		set player-dead-counter(0) next
+
+		set on-entry(1) next
+
+		//Enemy arrays
+		set enemy-x0(0) next
+		set enemy-x1(0) next
+		set enemy-x2(0) next
+
+		set enemy-y0(0) next
+		set enemy-y1(0) next
+		set enemy-y2(0) next
+
+		set enemy-life0(ENEMY-MAX-LIFE) next
+		set enemy-life1(ENEMY-MAX-LIFE) next
+		set enemy-life2(ENEMY-MAX-LIFE) next
+
+		set enemy-max-life0(ENEMY-MAX-LIFE) next
+		set enemy-max-life1(ENEMY-MAX-LIFE) next
+		set enemy-max-life2(ENEMY-MAX-LIFE) next
+
+		set enemy-start-attack0(0) next
+		set enemy-start-attack1(0) next
+		set enemy-start-attack2(0) next
+
+		//Enemy array params
+		set ENEMY-X-ARRAY-START(enemy-x0 getlink) next
+		set ENEMY-X-ARRAY-END(enemy-x2 getlink) next
+
+		set ENEMY-Y-ARRAY-START(enemy-y0 getlink) next
+		set ENEMY-Y-ARRAY-END(enemy-y2 getlink) next
+
+		set ENEMY-LIFE-ARRAY-START(enemy-life0 getlink) next
+		set ENEMY-LIFE-ARRAY-END(enemy-life2 getlink) next
+
+		set ENEMY-MAX-LIFE-ARRAY-START(enemy-max-life0 getlink) next
+		set ENEMY-MAX-LIFE-ARRAY-END(enemy-max-life2 getlink) next
+
+		set ENEMY-START-ATTACK-ARRAY-START(enemy-start-attack0 getlink) next
+		set ENEMY-START-ATTACK-ARRAY-END(enemy-start-attack2 getlink) next
+
+		set ENEMY-MAX-LIFE(2) next
+
+		set start-cursor-x(0) next
+		set start-cursor-y(0) next
+		set action get-cursor-x(start-cursor-x getlink) next
+		set action get-cursor-y(start-cursor-y getlink) next
+		
+		set exit-y(-1)
+	}
+}
+
+gen skipGeneration
+{
+	condition
+	{
+		not exist on-entry
+	}
+
+	result
+	{
+		set action transcript(skipGenerationLabel getgen)
+	}
+}
+
+gen generateSetup
+{
+	condition
+	{
+		exist on-entry
+	}
+
+	result
+	{
+		set generate-block-index(WORLD-ARRAY-START)
+	}
+}
+
+gen generate
+{
+	condition
+	{
+		exist on-entry
+	}
+
+	result
+	{
+		set temp-bottom-wall-start(WORLD-ARRAY-WIDTH) next
+		mul temp-bottom-wall-start(WORLD-ARRAY-HAIGHT) next
+		sub temp-bottom-wall-start(WORLD-ARRAY-WIDTH) next
+		sub temp-bottom-wall-start(1) next
+
+		set wall-index(generate-block-index) next
+		sub wall-index(WORLD-ARRAY-START) next
+
+		set wall-x(wall-index) next
+		mod wall-x(WORLD-ARRAY-WIDTH) next
+
+		set temp-world-end-x(WORLD-ARRAY-WIDTH) next
+		sub temp-world-end-x(1) next
+		
+		set need-build-box(0)
+	}
+}
+
+gen isBoxGenarate
+{
+	condition
+	{
+		wall-index < 10 or
+		wall-index > temp-bottom-wall-start or 
+		wall-x <= 0 or 
+		wall-x >= temp-world-end-x
+	}
+
+	result
+	{
+		set need-build-box(1)
+	}
+}
+
+gen generateBox
+{
+	condition
+	{
+		exist need-build-box
+	}
+
+	result
+	{
+		//build wall
+		set action set-cursor-x(WALL-TYPE) next
+    	set action get-cursor-x(generate-block-index)
+	}
+}
+
+gen generationLoop
+{
+	condition
+	{
+		exist on-entry and 
+		generate-block-index < WORLD-ARRAY-END
+	}
+
+	result
+	{
+		add generate-block-index(1) next
+		set action transcript(generate getgen)
+	}
+}
+
+gen sutupGenerationDoors
+{
+	condition
+	{
+		exist on-entry
+	}
+
+	result
+	{
+		set random-seed(2.5374343) next
+    	set random-max-value(WORLD-ARRAY-HAIGHT) next
+    	sub random-max-value(2)
+	}
+}
+
+gen tryRandSetEnterPosition
+{
+	condition
+	{
+		exit-y < 0 and 
+		exist on-entry
+	}
+
+	result
+	{
+		set action transcript(random getgen) next
+		set entry-y(random-value) next
+		
+		add entry-y(1) 
+	}
+}
+
+gen elseSetEnterPosition
+{
+	condition
+	{
+		exit-y >= 0 and 
+		exist on-entry
+	}
+
+	result
+	{
+		set entry-y(exit-y)
+	}
+}
+
+gen generateDoors
+{
+	condition
+	{
+		exist on-entry
+	}
+
+	result
+	{
+    	set action transcript(random getgen) next
+		set exit-y(random-value) next
+
+		//down round
+    	set action set-cursor-x(entry-y) next
+    	set action get-cursor-x(entry-y getlink) next
+    	set action set-cursor-x(exit-y) next
+    	set action get-cursor-x(exit-y getlink) next
+
+    	add exit-y(1) next
+
+    	//get index from position
+    	set entry-index(entry-y) next
+    	mul entry-index(WORLD-ARRAY-WIDTH) next
+    	add entry-index(temp-world-end-x) next
+    	add entry-index(WORLD-ARRAY-START) next
+
+    	set exit-index(exit-y) next
+    	mul exit-index(WORLD-ARRAY-WIDTH) next
+    	add exit-index(0) next
+    	add exit-index(WORLD-ARRAY-START) next
+
+    	//build entry
+		set action set-cursor-x(ENTRY-TYPE) next
+    	set action get-cursor-x(entry-index) next
+    	
+    	//build exit
+    	set action set-cursor-x(EXIT-TYPE) next
+    	set action get-cursor-x(exit-index)
+	}
+}
+
+gen generationCleanUp
+{
+	condition
+	{
+		exist on-entry
+	}
+
+	result
+	{
+		set action set-cursor-x(start-cursor-x) next
+		set action set-cursor-y(start-cursor-y) next
+		set on-entry(0) next
+		set generation-count(0)
+	}
+}
+
+gen skipGenerationLabel
+{
+	condition
+	{
+		not exist anyway
+	}
+
+	result
+	{
+		set empty(0)
+	}
+}
+
+//drawing
+gen setupDrawing
+{
+	condition
+	{
+		exist anyway
+	}
+
+	result
+	{
+		set block-index(WORLD-ARRAY-START) next
+		set action set-cursor-x(start-cursor-x) next
+		set action set-cursor-y(start-cursor-y)
+	}
+}
+
+gen drawStart
+{
+	condition
+	{
+		block-index >= WORLD-ARRAY-START and 
+		block-index <= WORLD-ARRAY-END
+	}
+
+	result
+	{
+		set valid-index(1)
+	}
+}
+
+gen getBlockType
+{
+	condition
+	{
+		exist valid-index
+	}
+
+	result
+	{
+		set block-type(block-index valuefrom)
+	}
+}
+
+gen getCurrentDrawPosition
+{
+	condition
+	{
+		exist valid-index
+	}
+
+	result
+	{
+		//index relatively array
+		set temp-index(block-index) next
+		sub temp-index(WORLD-ARRAY-START) next
+
+		set draw-x(temp-index) next
+		mod draw-x(WORLD-ARRAY-WIDTH) next
+
+		set draw-y(temp-index) next
+		sub draw-y(draw-x) next
+		div draw-y(WORLD-ARRAY-HAIGHT) next
+		
+		//iterate
+		add block-index(1)
+	}
+}
+
+gen newLine
+{
+	condition
+	{
+		exist valid-index and 
+		draw-x <= 0 and 
+		draw-y > 0
+	}
+
+	result
+	{
+		set action write(13) next
+		set action write(10)
+	}
+}
+
+gen playerDraw
+{
+	condition
+	{
+		draw-x == player-x and
+		draw-y == player-y and  
+		exist valid-index
+	}
+
+	result
+	{
+		//set gray
+		set color-index(GRAY-START) next
+		set action transcript(setColor getgen) next
+
+		set action write(FLOOR-CHAR) next
+
+		//set yellow
+		set color-index(YELLOW-START) next
+		set action transcript(setColor getgen) next
+
+		set action write(PLAYER-CHAR) next
+
+		set action transcript(skipDrawBlockLabel getgen)
+	}
+}
+
+
+gen floorDraw
+{
+	condition
+	{
+		block-type == FLOOR-TYPE and 
+		exist valid-index
+	}
+
+	result
+	{
+		//set gray
+		set color-index(GRAY-START) next
+		set action transcript(setColor getgen) next
+
+		set cur-char(FLOOR-CHAR) next
+		set action write(cur-char) next
+		set action write(cur-char)
+	}
+}
+
+gen wallDraw
+{
+	condition
+	{
+		block-type == WALL-TYPE and 
+		exist valid-index
+	}
+
+	result
+	{
+		//set white
+		set color-index(WHITE-START) next
+		set action transcript(setColor getgen) next
+
+		set cur-char(WALL-CHAR) next
+		set action write(cur-char) next
+		set action write(cur-char)
+	}
+}
+
+gen entryDraw
+{
+	condition
+	{
+		block-type == ENTRY-TYPE and 
+		exist valid-index
+	}
+
+	result
+	{
+		//set dark yellow
+		set color-index(DARK-YELLOW-START) next
+		set action transcript(setColor getgen) next
+
+		set action write(ENTRY-CHAR) next
+		set action write(ENTRY-CHAR) 
+	}
+}
+
+gen exitDraw
+{
+	condition
+	{
+		block-type == EXIT-TYPE and 
+		exist valid-index
+	}
+
+	result
+	{
+		//set dark yellow
+		set color-index(DARK-YELLOW-START) next
+		set action transcript(setColor getgen) next
+
+		set action write(EXIT1-CHAR) next
+		set action write(EXIT2-CHAR)
+	}
+}
+
+gen skipDrawBlockLabel
+{
+	condition
+	{
+	    not exist anyway
+	}
+
+	result
+	{
+		set empty(0)
+	}
+}
+
+gen drawLoop
+{
+	condition
+	{
+		exist valid-index
+	}
+
+	result
+	{
+		set valid-index(0) next
+		set action try-transcript(drawStart getgen)
+	}
+}
+
+gen lastNextLine
+{
+	condition
+	{
+		exist anyway
+	}
+
+	result
+	{
+		//set write
+		set color-index(WHITE-START) next
+		set action transcript(setColor getgen) next
+
+		set action write(13) next
+		set action write(10) next
+		set action write(13) next
+		set action write(10)
+	}
+}
+
+gen input
+{
+	condition
+	{
+		exist anyway
+	}
+
+	result
+	{
+		set input-char(0) next
+		set action read-key-char(input-char getlink)
+	}
+}
+
+gen input-move-up
+{
+	condition
+	{
+		input-char == UP-KEY
+	}
+
+	result
+	{
+		set move-player-x(0) next	
+		set move-player-y(-1) next
+		set action transcript(tryMovePlayer getgen)
+	}
+}
+
+gen input-move-down
+{
+	condition
+	{
+		input-char == DOWN-KEY
+	}
+
+	result
+	{
+		set move-player-x(0) next	
+		set move-player-y(1) next
+		set action transcript(tryMovePlayer getgen)
+	}
+}
+
+gen input-move-right
+{
+	condition
+	{
+		input-char == RIGHT-KEY
+	}
+
+	result
+	{
+		set move-player-x(1) next	
+		set move-player-y(0) next
+		set action transcript(tryMovePlayer getgen)
+	}
+}
+
+gen input-move-left
+{
+	condition
+	{
+		input-char == LEFT-KEY
+	}
+
+	result
+	{
+		set move-player-x(-1) next	
+		set move-player-y(0) next
+		set action transcript(tryMovePlayer getgen)
+	}
+}
+
+gen input-exit
+{
+	condition
+	{
+		input-char == INTERACT-KEY and 
+		player-x <= 0 and 
+		player-y == exit-y
+	}
+
+	result
+	{
+		set on-entry(1) next
+		set player-x(temp-world-end-x)
+	}
+}
+
+gen killThis
+{
+	condition
+	{
+		not exist anyway
+	}
+
+	result
+	{
+		set action kill(0)
+	}
+}
+
+
+//functions block
+gen functionsBlockStart
+{
+	condition
+	{
+		exist anyway
+	}
+
+	result
+	{
+		set action transcript(functionsBlockEnd getgen)
+	}
+}
+
+//random
+
+//args:
+//random-max-value
+//random-seed
+
+//return value:
+//random-value
+
+gen random
+{
+	condition
+	{
+		exist anyway
+	}
+
+	result
+	{
+		add random-max-value(0) next
+		add random-seed(0) next
+
+		set temp-random-value(random-value) next
+		div temp-random-value(2) next
+
+		mul random-value(temp-random-value) next
+		add random-value(random-seed) next
+		mod random-value(random-max-value) next
+		
+		set action return(0)
+	}
+}
+
+//tryMovePlayer
+
+//args:
+//move-player-x
+//move-player-y
+
+gen tryMovePlayer
+{
+	condition
+	{
+		exist anyway
+	}
+
+	result
+	{
+		set new-player-x(player-x) next
+		set new-player-y(player-y) next
+		
+		add new-player-x(move-player-x) next
+		add new-player-y(move-player-y) next
+		
+		set new-player-block-index(new-player-y) next
+		mul new-player-block-index(WORLD-ARRAY-HAIGHT) next
+		add new-player-block-index(new-player-x) next
+		
+		add new-player-block-index(WORLD-ARRAY-START) next
+
+		set player-block-type(-1)
+	}
+}
+
+gen getBlockTypePlayer
+{
+	condition
+	{
+		new-player-block-index >= WORLD-ARRAY-START and 
+		new-player-block-index <= WORLD-ARRAY-END and 
+
+		new-player-x >= 0 and 
+		new-player-x < WORLD-ARRAY-WIDTH
+	}
+
+	result
+	{
+		set player-block-type(new-player-block-index valuefrom)
+	}
+}
+
+gen movePlayer
+{
+	condition
+	{
+		player-block-type >= 0 and 
+		player-block-type != 1
+	}
+
+	result
+	{
+		set player-x(new-player-x) next
+		set player-y(new-player-y)
+	}
+}
+
+gen gotoBackMovePlayer
+{
+	condition
+	{
+		exist anyway
+	}
+
+	result
+	{
+		set action return(0)
+	}
+}
+
+//setColor
+
+//args:
+//color-index
+
+gen setColor
+{
+	condition
+	{
+		exist anyway
+	}
+
+	result
+	{
+		set action write(27) next // \x1b
+		set action write(91) next // [
+		set action write(51) next // 3
+		set action write(56) next // 8
+		set action write(59) next // ;
+		set action write(50) next // 2
+		set action write(59) next // ;
+
+		set temp-color-index(color-index) next
+
+		//set red
+		set action write(temp-color-index valuefrom) next
+		add temp-color-index(1) next
+		set action write(temp-color-index valuefrom) next
+		add temp-color-index(1) next
+		set action write(temp-color-index valuefrom) next
+		add temp-color-index(1) next
+
+		set action write(59) next // ;
+
+		//set green
+		set action write(temp-color-index valuefrom) next
+		add temp-color-index(1) next
+		set action write(temp-color-index valuefrom) next
+		add temp-color-index(1) next
+		set action write(temp-color-index valuefrom) next
+		add temp-color-index(1) next
+
+		set action write(59) next // ;
+
+		//set blue
+		set action write(temp-color-index valuefrom) next
+		add temp-color-index(1) next
+		set action write(temp-color-index valuefrom) next
+		add temp-color-index(1) next
+		set action write(temp-color-index valuefrom) next
+		add temp-color-index(1) next
+
+		set action write(109) next // m
+
+		set action return(0)
+	}
+}
+
+//resetColor
+
+gen resetColor
+{
+	condition
+	{
+		exist anyway
+	}
+
+	result
+	{
+		set action write(27) next  // \x1b
+		set action write(91) next  // [
+		set action write(51) next  // 0
+		set action write(109) next // m
+
+		set action return(0)
+	}
+}
+
+gen functionsBlockEnd
+{
+	condition
+	{
+		exist anyway
+	}
+
+	result
+	{
+		set empty(0)
+	}
+}

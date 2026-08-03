@@ -1,0 +1,273 @@
+gen init
+{
+	condition
+	{
+		not exist start
+	}
+
+	result
+	{
+		set start(1) next
+
+		set start-cursor-x(0) next
+		set start-cursor-y(0) next
+
+		set action get-cursor-x(start-cursor-x getlink) next
+		set action get-cursor-y(start-cursor-y getlink) next
+
+		set object-x(5) next
+		set object-y(3) next
+
+		set object-dir-x(0.219) next
+		set object-dir-y(0.78) next
+
+		set screen-drawed(0) next
+
+		set x-index(0) next
+		set y-index(0) next
+
+		set delay-counter(0) next
+
+		set OBJECT-CHAR(36) next
+		set FILL-CHAR(46) next
+		set WIDTH(10) next
+		set HEIGHT(10) next
+		set DELAY-TIME(50000)
+	}
+}
+
+//Drawing
+
+gen getPositionRange
+{
+	condition
+	{
+		exist start
+	}
+
+	result
+	{
+		set x-index-start(x-index) next
+		set y-index-start(y-index) next
+
+		set x-index-end(x-index) next
+		set y-index-end(y-index) next
+
+		sub x-index-start(1) next
+		sub y-index-start(1) next
+
+		add x-index-end(1) next
+		add y-index-end(1) next
+
+		set can-draw-object(0)
+	}
+}
+
+gen canDrawObjectFirst
+{
+	condition
+	{
+		x-index-start < object-x and
+		x-index-end > object-x and
+		
+		y-index-start < object-y and
+		y-index-end > object-y
+	}
+
+	result
+	{
+		set can-draw-object(1)
+	}
+}
+
+gen drawSpace
+{
+	condition
+	{
+		not exist can-draw-object
+	}
+
+	result
+	{
+		set action write(FILL-CHAR) next
+		set action write(FILL-CHAR)
+	}
+}
+
+gen drawObject
+{
+	condition
+	{
+		exist can-draw-object
+	}
+
+	result
+	{
+		set action write(FILL-CHAR) next
+		set action write(OBJECT-CHAR)
+	}
+}
+
+//Move cursor
+
+gen iterateX
+{
+	condition
+	{
+		y-index <= HEIGHT
+	}
+
+	result
+	{
+		add x-index(1)
+	}
+}
+
+gen iterateY
+{
+	condition
+	{
+		x-index > WIDTH
+	}
+
+	result
+	{
+		set x-index(0) next
+		add y-index(1) next
+		set action write(13) next
+		set action write(10)
+	}
+}
+
+gen endDrawScreen
+{
+	condition
+	{
+		y-index > HEIGHT
+	}
+
+	result
+	{
+		set screen-drawed(1) next 
+
+		set x-index(0) next
+		set y-index(0) next
+
+		set action set-cursor-x(start-cursor-x) next
+		set action set-cursor-y(start-cursor-y)
+	}
+}
+
+gen delayLoopEnd
+{
+	condition
+	{
+		exist start
+	}
+
+	result
+	{
+		set action try-transcript(delayLoopStart getgen)
+	}
+}
+
+gen delayLoopStart
+{
+	condition
+	{
+		exist screen-drawed and
+		delay-counter < DELAY-TIME
+	}
+
+	result
+	{ 
+		add delay-counter(1) next
+		set action try-transcript(delayLoopEnd getgen)
+	}
+}
+
+//Moving and reflacting
+
+gen moveObject
+{
+	condition
+	{
+		exist screen-drawed
+	}
+
+	result
+	{
+		add object-x(object-dir-x) next
+		add object-y(object-dir-y)
+	}
+}
+
+gen reflactRight
+{
+	condition
+	{
+		exist screen-drawed and
+		object-x >= WIDTH
+	}
+
+	result
+	{
+		mul object-dir-x(-1) 
+	}
+}
+
+gen reflactLeft
+{
+	condition
+	{
+		exist screen-drawed and
+		object-x <= 0
+	}
+
+	result
+	{
+		mul object-dir-x(-1) 
+	}
+}
+
+gen reflactBootom
+{
+	condition
+	{
+		exist screen-drawed and
+		object-y >= HEIGHT
+	}
+
+	result
+	{
+		mul object-dir-y(-1) 
+	}
+}
+
+gen reflactTop
+{
+	condition
+	{
+		exist screen-drawed and
+		object-y <= 0
+	}
+
+	result
+	{
+		mul object-dir-y(-1) 
+	}
+}
+
+gen moveEnd
+{
+	condition
+	{
+		exist screen-drawed
+	}
+
+	result
+	{
+		set screen-drawed(0) next
+		set delay-counter(0)
+	}
+}

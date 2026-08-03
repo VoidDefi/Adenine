@@ -1,0 +1,115 @@
+//Draw Rectangle
+
+gen init
+{
+	condition
+	{
+		not exist start
+	}
+
+	result
+	{
+		set start(1) next
+		set RECTANGLE-WIDTH(10) next
+		set RECTANGLE-HAIGHT(10) next
+		set BORDER-CHAR(35) next
+		set FILL-CHAR(46)
+	}
+}
+
+gen fill
+{
+	condition
+	{
+		exist start
+	}
+
+	result
+	{
+		set current-char(FILL-CHAR)
+	}
+}
+
+gen horisontalBorder
+{
+	condition
+	{
+		y-index <= 0 or
+		y-index >= RECTANGLE-HAIGHT
+	}
+
+	result
+	{
+		set current-char(BORDER-CHAR)
+	}
+}
+
+gen verticalBorder
+{
+	condition
+	{
+		x-index <= 0 or
+		x-index >= RECTANGLE-WIDTH
+	}
+
+	result
+	{
+		set current-char(BORDER-CHAR)
+	}
+}
+
+gen drawRectange
+{
+	condition
+	{
+		exist start
+	}
+
+	result
+	{
+		set action write(current-char) next
+		set action write(current-char)
+	}
+}
+
+gen iterateX
+{
+	condition
+	{
+		y-index <= RECTANGLE-HAIGHT
+	}
+
+	result
+	{
+		add x-index(1)
+	}
+}
+
+gen iterateY
+{
+	condition
+	{
+		x-index > RECTANGLE-WIDTH
+	}
+
+	result
+	{
+		set x-index(0) next
+		add y-index(1) next
+		set action write(13) next
+		set action write(10)
+	}
+}
+
+gen exit
+{
+	condition
+	{
+		y-index > RECTANGLE-HAIGHT
+	}
+
+	result
+	{
+		set action kill(0)
+	}
+}
