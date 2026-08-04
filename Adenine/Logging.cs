@@ -11,6 +11,18 @@ namespace Adenine
 {
     internal class Logging
     {
+        public static StringBuilder ProgramOutput { get; private set; } = new StringBuilder();
+
+        public static void ProgramOutputClear()
+        {
+            ProgramOutput = new StringBuilder();
+        }
+
+        public static void ProgramOutputAppend(char c)
+        {
+            ProgramOutput.Append(c);
+        }
+
         internal static void SaveTokenTree(List<TokenTreeObject> tokenTree)
         {
             List<TokenTreeObject> currentBranch = tokenTree;

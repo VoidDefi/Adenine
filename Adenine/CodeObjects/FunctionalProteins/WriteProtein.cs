@@ -10,6 +10,7 @@ namespace Adenine.CodeObjects.FunctionalProteins
 
         public override void Invoke(float value, ref ProgramRunModifier modifier)
         {
+            Logging.ProgramOutputAppend((char)(int)value);
             Console.Write((char)(int)value);
         }
     }
