@@ -203,19 +203,32 @@ namespace Adenine.VirtualMachineEngine
                                     return;
                                 }
 
+                                int proteinIndex = result.ProteinIndex;
+
+                                if (result.Pointer)
+                                {
+                                    proteinIndex = (int)Cell.Proteins[proteinIndex];
+
+                                    if (IsInvalidProteinIndex(proteinIndex))
+                                    {
+                                        Throw<ProteinIndexOutOfRangeRuntimeError>();
+                                        return;
+                                    }
+                                }
+
                                 switch (result.Operation)
                                 {
                                     case ProteinOperation.Set:
-                                        Cell.Proteins[result.ProteinIndex] = value;
+                                        Cell.Proteins[proteinIndex] = value;
                                         break;
                                     case ProteinOperation.Add:
-                                        Cell.Proteins[result.ProteinIndex] += value;
+                                        Cell.Proteins[proteinIndex] += value;
                                         break;
                                     case ProteinOperation.Subtract:
-                                        Cell.Proteins[result.ProteinIndex] -= value;
+                                        Cell.Proteins[proteinIndex] -= value;
                                         break;
                                     case ProteinOperation.Multiply:
-                                        Cell.Proteins[result.ProteinIndex] *= value;
+                                        Cell.Proteins[proteinIndex] *= value;
                                         break;
                                     case ProteinOperation.Divide:
 
@@ -225,7 +238,7 @@ namespace Adenine.VirtualMachineEngine
                                             return;
                                         }
 
-                                        Cell.Proteins[result.ProteinIndex] /= value;
+                                        Cell.Proteins[proteinIndex] /= value;
                                         break;
                                     case ProteinOperation.DivideByModule:
 
@@ -235,7 +248,7 @@ namespace Adenine.VirtualMachineEngine
                                             return;
                                         }
 
-                                        Cell.Proteins[result.ProteinIndex] %= value;
+                                        Cell.Proteins[proteinIndex] %= value;
                                         break;
                                 }
                             }

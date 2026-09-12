@@ -507,6 +507,11 @@ namespace Adenine.Compiler
                 {
                     errors.Add(new ProteinNotInitedError(token.LineNumber));
                 }
+
+                if (token.Text.IndexOf('#') >= 0)
+                {
+                    errors.Add(new PointerCharExistInProteinNameError(token.LineNumber));
+                }
             }
 
             foreach (Token token in resultProteins)
@@ -514,6 +519,11 @@ namespace Adenine.Compiler
                 if (genNames.FindIndex(g => g.Text == token.Text) >= 0)
                 {
                     errors.Add(new GenNameEqualProteinNameError(token.LineNumber));
+                }
+
+                if (token.Text.IndexOf('#') >= 0)
+                {
+                    errors.Add(new PointerCharExistInProteinNameError(token.LineNumber));
                 }
             }
 
@@ -534,6 +544,11 @@ namespace Adenine.Compiler
                 if (proteins.FindIndex(p => p == token.Text) < 0)
                 {
                     proteins.Add(token.Text);
+                }
+
+                if (token.Text.IndexOf('#') >= 0)
+                {
+                    errors.Add(new PointerCharExistInProteinNameError(token.LineNumber));
                 }
             }
 
@@ -636,6 +651,7 @@ namespace Adenine.Compiler
                     ProteinOperation operation = result.Operation;
                     bool action = result.Action;
                     string proteinName = result.ProteinName.Text;
+                    bool pointer = result.IsPointer;
                     float? value = result.Value;
                     string? inputName = result.InputName?.Text;
                     NameTranslateMode? translateMode = result.TranslateMode;
@@ -666,7 +682,7 @@ namespace Adenine.Compiler
                     {
                         compiledResults[resultBlock.Key].Add
                         (
-                            new Result(operation, action, proteinIndex, (float)value.Value)
+                            new Result(operation, action, proteinIndex, pointer, (float)value.Value)
                         );
                     }
 
@@ -691,7 +707,7 @@ namespace Adenine.Compiler
 
                             compiledResults[resultBlock.Key].Add
                             (
-                                new Result(operation, action, proteinIndex, (float)index)
+                                new Result(operation, action, proteinIndex, pointer, (float)index)
                             );
                         }
 
@@ -704,7 +720,7 @@ namespace Adenine.Compiler
 
                             compiledResults[resultBlock.Key].Add
                             (
-                                new Result(operation, action, proteinIndex, (int)varIndex, valueFrom)
+                                new Result(operation, action, proteinIndex, pointer, (int)varIndex, valueFrom)
                             );
                         }
                     }
@@ -1026,6 +1042,7 @@ namespace Adenine.Compiler
                 ProteinOperation? operation = null;
                 bool action = false; 
                 Token? protein = null;
+                bool isPointer = false;
                 float? value = null;
                 Token? inputVar = null;
                 NameTranslateMode? translateMode = null;
@@ -1111,7 +1128,29 @@ namespace Adenine.Compiler
                                     errors.Add(new NotAvailableInContextError(token.LineNumber));
                                 }
 
-                                else protein = token;
+                                else
+                                {
+                                    //шя говнокод пойдёт, опять...
+                                    int pointerIndex = token.Text.IndexOf('#');
+
+                                    if (pointerIndex < 0)
+                                    {
+                                        protein = token;
+                                    }
+
+                                    else if (pointerIndex == 0)
+                                    {
+                                        string name = token.Text.Substring(1);
+
+                                        protein = new Token(name, token.LineNumber);
+                                        isPointer = true;
+                                    }
+
+                                    else
+                                    {
+                                        errors.Add(new PointerCharIndexIsWrongError(token.LineNumber));
+                                    }
+                                }
 
                                 var branch = treeToken.Branch;
 
@@ -1190,6 +1229,9 @@ namespace Adenine.Compiler
                                 if (next && isEnd)
                                     errors.Add(new NotAvailableInContextError(token.LineNumber));
 
+                                if (action && isPointer)
+                                    errors.Add(new ExistActionAndPointerError(token.LineNumber));
+
                                 if (operation != null && protein != null)
                                 {
                                     if (value != null && inputVar == null)
@@ -1199,6 +1241,7 @@ namespace Adenine.Compiler
                                             operation.Value,
                                             action,
                                             protein.Value,
+                                            isPointer,
                                             value.Value
                                         ));
                                     }
@@ -1210,6 +1253,7 @@ namespace Adenine.Compiler
                                             operation.Value,
                                             action,
                                             protein.Value,
+                                            isPointer,
                                             inputVar.Value,
                                             translateMode,
                                             valueFrom
@@ -1231,6 +1275,7 @@ namespace Adenine.Compiler
                                 operation = null;
                                 action = false;
                                 protein = null;
+                                isPointer = false;
                                 value = null;
                                 inputVar = null;
                                 translateMode = null;

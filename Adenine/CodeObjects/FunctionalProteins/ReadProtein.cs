@@ -25,7 +25,9 @@ namespace Adenine.CodeObjects.FunctionalProteins
                 return;
             }
 
-            VirtualMachine.Cell.Proteins[index] = Console.Read();
+            int c = Console.Read();
+
+            VirtualMachine.Cell.Proteins[index] = c;
         }
     }
 }

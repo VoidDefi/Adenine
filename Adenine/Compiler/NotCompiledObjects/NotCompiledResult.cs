@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,6 +16,8 @@ namespace Adenine.Compiler.NotCompiledObjects
 
         public Token ProteinName { get; private set; }
 
+        public bool IsPointer { get; private set; }
+
         public float? Value { get; private set; } = null;
 
         public Token? InputName { get; private set; } = null;
@@ -23,22 +26,24 @@ namespace Adenine.Compiler.NotCompiledObjects
 
         public NameTranslateMode? TranslateMode { get; private set; } = null;
 
-        public NotCompiledResult(ProteinOperation operation, bool action, Token proteinName, float value)
+        public NotCompiledResult(ProteinOperation operation, bool action, Token proteinName, bool isPointer, float value)
         {
             Operation = operation;
             Action = action;
             ProteinName = proteinName;
+            IsPointer = isPointer;
             Value = value;
             InputName = null;
             TranslateMode = null;
             GetValueFrom = false;
         }
 
-        public NotCompiledResult(ProteinOperation operation, bool action, Token proteinName, Token inputName, NameTranslateMode? translateMode, bool getValueFrom)
+        public NotCompiledResult(ProteinOperation operation, bool action, Token proteinName, bool isPointer, Token inputName, NameTranslateMode? translateMode, bool getValueFrom)
         {
             Operation = operation;
             Action = action;
             ProteinName = proteinName;
+            IsPointer = isPointer;
             Value = null;
             InputName = inputName;
             TranslateMode = translateMode;
@@ -48,13 +53,19 @@ namespace Adenine.Compiler.NotCompiledObjects
         public override string ToString()
         {
             string getValueFrom = GetValueFrom ? " valuefrom" : "";
+            string pointer = IsPointer ? "#" : "";
 
             if (InputName == null && TranslateMode == null && Value != null && !GetValueFrom)
             {
                 string action = Action ? "action " : "";
                 string operation = ProteinOperationParser.ToString(Operation);
 
-                return $"{operation} {action}{ProteinName.Text}({Value})";
+                if (Action && IsPointer)
+                {
+                    return "error";
+                }
+
+                return $"{operation} {action}{pointer}{ProteinName.Text}({Value})";
             }
 
             else if (Value == null && InputName != null)
@@ -64,12 +75,12 @@ namespace Adenine.Compiler.NotCompiledObjects
 
                 string operation = ProteinOperationParser.ToString(Operation);
 
-                if (getValueFrom != "" && mode != "")
+                if ((getValueFrom != "" && mode != "") || (Action && IsPointer))
                 {
                     return "error";
                 }
 
-                return $"{operation} {action}{ProteinName.Text}({InputName.Value.Text}{mode}{getValueFrom})";
+                return $"{operation} {action}{pointer}{ProteinName.Text}({InputName.Value.Text}{mode}{getValueFrom})";
             }
 
             return "error";

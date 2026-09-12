@@ -16,6 +16,8 @@ namespace Adenine.CodeObjects
 
         public int ProteinIndex { get; private set; }
 
+        public bool Pointer { get; private set; }
+
         public float Value { get; private set; }
 
         public int InputProtein { get; private set; } = -1;
@@ -28,25 +30,28 @@ namespace Adenine.CodeObjects
             1 + //Operation
             1 + //Action
             4 + //ProteinIndex
+            1 + //Pointer
             4 + //Value
             4 + //InputProtein
             1;  //GetValueFrom
 
-        public Result(ProteinOperation operation, bool action, int proteinIndex, float value)
+        public Result(ProteinOperation operation, bool action, int proteinIndex, bool pointer, float value)
         {
             Operation = operation;
             Action = action;
             ProteinIndex = proteinIndex;
+            Pointer = pointer;
             Value = value;
             InputProtein = -1;
             GetValueFrom = false;
         }
 
-        public Result(ProteinOperation operation, bool action, int proteinIndex, int inputProtein, bool getValueFrom)
+        public Result(ProteinOperation operation, bool action, int proteinIndex, bool pointer, int inputProtein, bool getValueFrom)
         {
             Operation = operation;
             Action = action;
             ProteinIndex = proteinIndex;
+            Pointer = pointer;
             Value = 0;
             InputProtein = inputProtein;
             GetValueFrom = getValueFrom;
@@ -58,12 +63,15 @@ namespace Adenine.CodeObjects
             string action = Action ? "action " : "";
             string getValueFrom = GetValueFrom ? " valuefrom" : "";
 
+            string pointer = Pointer ? "#[" : "";
+            string pointerEnd = Pointer ? "]" : "";
+
             if (UseProteinValue)
             {
-                return $"{operation} {action}p#{ProteinIndex}(p#{InputProtein}{getValueFrom})";
+                return $"{operation} {action}{pointer}p#{ProteinIndex}{pointerEnd}(p#{InputProtein}{getValueFrom})";
             }
 
-            return $"{operation} {action}p#{ProteinIndex}({Value})";
+            return $"{operation} {action}{pointer}p#{ProteinIndex}{pointerEnd}({Value})";
         }
 
         public byte[] Serialize()
@@ -73,6 +81,7 @@ namespace Adenine.CodeObjects
             bytes.Add((byte)Operation);
             bytes.Add((byte)(Action ? 1 : 0));
             bytes.AddRange(BitConverter.GetBytes(ProteinIndex));
+            bytes.Add((byte)(Pointer ? 1 : 0));
             bytes.AddRange(BitConverter.GetBytes(Value));
             bytes.AddRange(BitConverter.GetBytes(InputProtein));
             bytes.Add((byte)(GetValueFrom ? 1 : 0));
@@ -98,6 +107,9 @@ namespace Adenine.CodeObjects
 
             ProteinIndex = BitConverter.ToInt32(bytes, currentOffset);
             currentOffset += 4;
+
+            Pointer = bytes[currentOffset] > 0;
+            currentOffset += 1;
 
             Value = BitConverter.ToSingle(bytes, currentOffset);
             currentOffset += 4;
