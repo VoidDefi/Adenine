@@ -12,12 +12,16 @@ namespace Adenine.CodeObjects
 
         public Gen[] Gens { get; private set; } = [];
 
-        public Cell(Gen[] gens, int proteinCount)
+        public List<Gen>[] Plasmids { get; private set; } = [];
+
+        public Cell (Gen[] gens, int proteinCount, List<Gen>[] plasmids)
         {
-            if (gens == null) throw new ArgumentNullException(nameof(gens));
+            if (gens == null || plasmids == null)
+                throw new ArgumentNullException(nameof(gens));
 
             Gens = gens;
             Proteins = new float[proteinCount];
+            Plasmids = plasmids;
         }
     }
 }

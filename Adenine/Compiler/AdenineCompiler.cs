@@ -199,7 +199,9 @@ namespace Adenine.Compiler
                     var treeToken = currentBranch[i];
                     Token token = treeToken.Token;
 
-                    if (token.Text == ReservedNames.Gen)
+                    if (token.Text == ReservedNames.Gen || 
+                        token.Text == ReservedNames.Scope ||
+                        token.Text == ReservedNames.EndScope)
                     {
                         if (branchDeep != 0)
                         {
@@ -267,6 +269,8 @@ namespace Adenine.Compiler
             List<TokenTreeObject> currentBranch = tokenTree;
             Stack<(List<TokenTreeObject> branch, int lastIndex)> stack = new();
 
+            List<(Token token, int start, int end)> scopes = new();
+
             int branchDeep = 0;
 
             int startIndex = 0;
@@ -282,6 +286,9 @@ namespace Adenine.Compiler
 
             int conditionCount = 0;
             int resultCount = 0;
+
+            Token? scopeName = null;
+            int? startScope = null;
 
             while (!needExit)
             {
@@ -317,6 +324,38 @@ namespace Adenine.Compiler
                         {
                             errors.Add(new ReservedNameError(token.LineNumber));
                         }
+                    }
+
+                    if (token.Text == ReservedNames.Scope)
+                    {
+                        if (scopeName != null || startScope != null)
+                            errors.Add(new ScopeNotEndedOrStartedError(token.LineNumber));
+
+                        if (i + 1 >= currentBranch.Count)
+                            errors.Add(new NotSetScopeNameError(token.LineNumber));
+
+                        else
+                        {
+                            Token name = currentBranch[i + 1].Token;
+                            scopeName = name;
+                            startScope = genNames.Count;
+                            //i++;
+                            //continue;
+                        }
+                    }
+
+                    if (token.Text == ReservedNames.EndScope)
+                    {
+                        if (i + 1 >= currentBranch.Count)
+                            errors.Add(new NotSetScopeNameError(token.LineNumber));
+
+                        if (scopeName == null || startScope == null)
+                            errors.Add(new ScopeNotEndedOrStartedError(token.LineNumber));
+
+                        scopes.Add((scopeName.Value, startScope.Value, genNames.Count));
+
+                        scopeName = null;
+                        startScope = null;
                     }
 
                     if (conditionDefine)
@@ -422,6 +461,9 @@ namespace Adenine.Compiler
                 }
             }
 
+            if (scopeName != null || startScope != null)
+                errors.Add(new ScopeNotEndedOrStartedError(currentBranch[currentBranch.Count - 1].Token.LineNumber));
+
             if (errors.Count > 0) return null;
 
             ProcessConditionsAndResults
@@ -453,6 +495,7 @@ namespace Adenine.Compiler
             List<Token> actionsProteins = new();
             List<Token> inputProteins = new();
             List<Token> inputGens = new();
+            List<Token> inputPlasmids = new();
 
             List<Token> conditionProteins = new();
             List<Token> comperingProteins = new();
@@ -472,6 +515,9 @@ namespace Adenine.Compiler
                     {
                         if (result.TranslateMode == NameTranslateMode.GetGen)
                             inputGens.Add(result.InputName.Value);
+
+                        else if (result.TranslateMode == NameTranslateMode.GetPlasmid)
+                            inputPlasmids.Add(result.InputName.Value);
 
                         else inputProteins.Add(result.InputName.Value);
                     }
@@ -552,8 +598,84 @@ namespace Adenine.Compiler
                 }
             }
 
+            foreach (Token token in inputPlasmids)
+            {
+                if (scopes.FindIndex(s => s.token.Text == token.Text) < 0)
+                {
+                    errors.Add(new PlasmidNotExistError(token.LineNumber));
+                }
+            }
+
             if (errors.Count > 0)
                 return null;
+
+            List<(Token token, int start, int end)> usedScopes = new();
+
+            foreach (var scope in scopes)
+            {
+                if (inputPlasmids.FindIndex(p => p.Text == scope.token.Text) >= 0)
+                {
+                    usedScopes.Add(scope);
+                }
+
+                else 
+                { 
+                    
+                }
+            }
+
+            Dictionary<int, List<int>> gensMap = new();
+
+            int allGensCount = conditions.Count;
+
+            for (int i = 0; i < allGensCount; i++)
+            {
+                bool isOutOfScopes = true;
+
+                for (int j = 0; j < usedScopes.Count; j++)
+                {
+                    if (i >= usedScopes[j].start && i < usedScopes[j].end)
+                    {
+                        isOutOfScopes = false;
+
+                        if (!gensMap.ContainsKey(j))
+                        {
+                            gensMap.Add(j, new List<int>());
+                        }
+
+                        gensMap[j].Add(i);
+
+                        break;
+                    }
+                }
+
+                if (isOutOfScopes)
+                {
+                    bool isUnusedScope = false;
+
+                    for (int j = 0; j < scopes.Count; j++)
+                    {
+                        if (i >= scopes[j].start && i < scopes[j].end)
+                        {
+                            isUnusedScope = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!isUnusedScope) 
+                    {
+                        if (!gensMap.ContainsKey(-1))
+                        {
+                            gensMap.Add(-1, new List<int>());
+                        }
+
+                        gensMap[-1].Add(i); 
+                    }
+                }
+            }
+
+            if (!gensMap.ContainsKey(-1))
+                throw new Exception();
 
             //Assembly cell
 
@@ -699,7 +821,22 @@ namespace Adenine.Compiler
 
                             else if (translateMode == NameTranslateMode.GetGen)
                             {
-                                index = genNames.FindIndex(t => t.Text == inputName);
+                                int rawIndex = genNames.FindIndex(t => t.Text == inputName);
+
+                                foreach (var genIndexes in gensMap)
+                                {
+                                    int realIndexIndex = genIndexes.Value.FindIndex(i => i == rawIndex);
+
+                                    if (realIndexIndex < 0) throw new Exception();
+
+                                    index = genIndexes.Value[realIndexIndex];
+                                    break;
+                                }
+                            }
+
+                            else if (translateMode == NameTranslateMode.GetPlasmid)
+                            {
+                                index = usedScopes.FindIndex(t => t.token.Text == inputName);
                             }
 
                             if (index < 0)
@@ -735,9 +872,11 @@ namespace Adenine.Compiler
             if (compiledConditions.Count != genNames.Count)
                 throw new Exception();
 
+            Dictionary<int, List<Gen>> plasmids = new();
+
             List<Gen> gens = new();
 
-            for (int i = 0; i < genNames.Count; i++)
+            /*for (int i = 0; i < genNames.Count; i++)
             {
                 var conditionBlock = compiledConditions.ElementAt(i);
                 var resultBlock = compiledResults.ElementAt(i);
@@ -748,9 +887,49 @@ namespace Adenine.Compiler
                 if (conditionBlock.Key != genName) throw new Exception();
 
                 gens.Add(new Gen(conditionBlock.Value.ToArray(), resultBlock.Value.ToArray()));
+            }*/
+
+            foreach (var gensScope in gensMap)
+            {
+                List<int> gensIndexes = gensScope.Value;
+                int scopeIndex = gensScope.Key;
+
+                for (int i = 0; i < gensIndexes.Count; i++)
+                {
+                    int genIndex = gensIndexes[i];
+
+                    var conditionBlock = compiledConditions.ElementAt(genIndex);
+                    var resultBlock = compiledResults.ElementAt(genIndex);
+
+                    string genName = genNames[genIndex].Text;
+
+                    if (conditionBlock.Key != resultBlock.Key) throw new Exception();
+                    if (conditionBlock.Key != genName) throw new Exception();
+
+                    List<Gen> curGens = gens;
+
+                    if (scopeIndex >= 0)
+                    {
+                        if (!plasmids.ContainsKey(scopeIndex))
+                        {
+                            plasmids.Add(scopeIndex, new());
+                        }
+
+                        curGens = plasmids[scopeIndex];
+                    }
+
+                    curGens.Add(new Gen(conditionBlock.Value.ToArray(), resultBlock.Value.ToArray()));
+                }
             }
 
-            Cell cell = new Cell(gens.ToArray(), proteins.Count);
+            List<Gen>[] exitPlasmids = new List<Gen>[plasmids.Count];
+
+            for (int i = 0; i < exitPlasmids.Length; i++)
+            {
+                exitPlasmids[i] = plasmids[i];
+            }
+
+            Cell cell = new Cell(gens.ToArray(), proteins.Count, exitPlasmids);
 
             string[] debugGenNames = new string[genNames.Count];
 
@@ -759,7 +938,7 @@ namespace Adenine.Compiler
                 debugGenNames[i] = genNames[i].Text;
             }
 
-            debugData = new DebugData(cell, proteins.ToArray(), debugGenNames);
+            debugData = null;//new DebugData(cell, proteins.ToArray(), debugGenNames);
 
             return cell;
         }
@@ -1205,6 +1384,9 @@ namespace Adenine.Compiler
 
                                             else if (secondToken.Text == ReservedNames.GetGen)
                                                 translateMode = NameTranslateMode.GetGen;
+
+                                            else if (secondToken.Text == ReservedNames.GetPlasmid)
+                                                translateMode = NameTranslateMode.GetPlasmid;
 
                                             else if (secondToken.Text == ReservedNames.ValueFrom)
                                                 valueFrom = true;

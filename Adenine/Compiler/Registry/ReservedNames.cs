@@ -42,9 +42,15 @@ namespace Adenine.Compiler.Registry
 
         public static string GetGen => "getgen";
 
+        public static string GetPlasmid => "getplasmid";
+
         public static string ValueFrom => "valuefrom";
 
         public static string Next => "next";
+
+        public static string Scope => "~scope";
+
+        public static string EndScope => "~endscope";
 
         public static string[] Registry { get; private set; } = [];
 

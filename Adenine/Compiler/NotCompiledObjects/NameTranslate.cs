@@ -9,6 +9,7 @@ namespace Adenine.Compiler.NotCompiledObjects
     internal enum NameTranslateMode
     {
         GetLink,
-        GetGen
+        GetGen, 
+        GetPlasmid
     }
 }

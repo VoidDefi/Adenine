@@ -65,12 +65,14 @@ namespace Adenine
             else
             {
                 if (cell == null) throw new Exception();
-                if (debugData == null) throw new Exception();
-
+                
                 Console.WriteLine("Compilation was successful!");
 
-                byte[] debugBytes = DebugDataSerializer.Serialize(debugData);
-                File.WriteAllBytes(DebugDataFile, debugBytes);
+                if (debugData != null)
+                {
+                    byte[] debugBytes = DebugDataSerializer.Serialize(debugData);
+                    File.WriteAllBytes(DebugDataFile, debugBytes);
+                }
 
                 byte[] programBytes = ProgramSerializer.Serialize(cell);
                 File.WriteAllBytes(ProgramFile, programBytes);
