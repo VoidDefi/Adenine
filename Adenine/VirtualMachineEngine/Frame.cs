@@ -34,6 +34,8 @@ namespace Adenine.VirtualMachineEngine
 
         public int GenIndex { get; set; }
 
+        public EntryPoint EntryPoint { get; private set; }
+
         public Frame(int plasmidIndex)
         { 
             if (plasmidIndex < -1 || plasmidIndex >= VirtualMachine.Cell.Plasmids.Length)
@@ -42,6 +44,7 @@ namespace Adenine.VirtualMachineEngine
             }
 
             PlasmidIndex = plasmidIndex;
+            EntryPoint = new EntryPoint();
         }
     }
 }

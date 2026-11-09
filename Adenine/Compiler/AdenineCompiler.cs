@@ -825,12 +825,19 @@ namespace Adenine.Compiler
 
                                 foreach (var genIndexes in gensMap)
                                 {
-                                    int realIndexIndex = genIndexes.Value.FindIndex(i => i == rawIndex);
+                                    if (genIndexes.Value.Contains(i))
+                                    {
+                                        int realIndexIndex = genIndexes.Value.FindIndex(i => i == rawIndex);
 
-                                    if (realIndexIndex < 0) throw new Exception();
+                                        if (realIndexIndex < 0) //throw new Exception();
+                                        {
+                                            //errors.Add(new GenNotExistError(token.LineNumber));
+                                            throw new Exception();
+                                        }
 
-                                    index = genIndexes.Value[realIndexIndex];
-                                    break;
+                                        index = realIndexIndex;
+                                        break;
+                                    }
                                 }
                             }
 

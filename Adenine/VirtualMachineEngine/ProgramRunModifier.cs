@@ -12,7 +12,11 @@ namespace Adenine.VirtualMachineEngine
 
         public bool NeedExitFrom { get; private set; } = false;
 
-        public int? InjectedPlasmidIndex { get; private set; } = null; 
+        public int? InjectedPlasmidIndex { get; private set; } = null;
+
+        public int? TranscriptGenIndex { get; private set; } = null;
+
+        public bool TranscriptSaveEntryPoint {  get; private set; } = false;
 
         public ProgramRunModifier()
         {
@@ -39,6 +43,15 @@ namespace Adenine.VirtualMachineEngine
         {
             ProgramRunModifier modifier = new();
             modifier.InjectedPlasmidIndex = plasmid;
+
+            return modifier;
+        }
+
+        public static ProgramRunModifier CreateTranscript(int genIndex, bool saveEntryPoint)
+        {
+            ProgramRunModifier modifier = new();
+            modifier.TranscriptGenIndex = genIndex;
+            modifier.TranscriptSaveEntryPoint = saveEntryPoint;
 
             return modifier;
         }

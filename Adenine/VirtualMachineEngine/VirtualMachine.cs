@@ -58,6 +58,8 @@ namespace Adenine.VirtualMachineEngine
 
         public static bool PassGens(Gen[] gens)
         {
+            bool forcefullyExecute = false;
+
             for (int i = 0; i < gens.Length; i++)
             {
                 Gen gen = gens[i];
@@ -70,8 +72,12 @@ namespace Adenine.VirtualMachineEngine
                 if (errorThrowed)
                     return true;
 
-                if (isSuccess)
+                if (isSuccess || forcefullyExecute)
                 {
+                    forcefullyExecute = false;
+
+                    int transcriptGenIndex = -1;
+
                     for (int j = 0; j < gen.Results.Length; j++)
                     {
                         var modifier = ExecuteOneResult(gen.Results[j]);
@@ -90,6 +96,26 @@ namespace Adenine.VirtualMachineEngine
                                 }
 
                                 return false;
+                            }
+
+                            if (modifier.Value.TranscriptGenIndex.HasValue)
+                            {
+                                if (modifier.Value.TranscriptSaveEntryPoint)
+                                {
+                                    EntryPoint entry = CallStack.Peek().EntryPoint;
+                                    entry.gen = i;
+                                    entry.instruction = j;
+                                }
+
+                                transcriptGenIndex = modifier.Value.TranscriptGenIndex.Value;
+
+                                if (transcriptGenIndex < 0 || transcriptGenIndex >= gens.Length)
+                                {
+                                    Throw<GenIndexOutOfRangeRuntimeError>();
+                                    return true;
+                                }
+
+                                break;
                             }
 
                             if (modifier.Value.InjectedPlasmidIndex.HasValue)
@@ -118,6 +144,13 @@ namespace Adenine.VirtualMachineEngine
                                 CallStack.Pop();
                             }
                         }
+                    }
+
+                    if (transcriptGenIndex >= 0)
+                    {
+                        i = transcriptGenIndex - 1;
+                        forcefullyExecute = true;
+                        continue;
                     }
                 }
             }

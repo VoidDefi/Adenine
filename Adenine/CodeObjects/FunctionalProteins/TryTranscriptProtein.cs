@@ -16,29 +16,29 @@ namespace Adenine.CodeObjects.FunctionalProteins
 
         public override void Invoke(float value, ref ProgramRunModifier modifier)
         {
-            /*int index = (int)value;
+            int index = (int)value;
 
-            if (index < 0 || index >= VirtualMachine.Cell.Gens.Length)
-            {
-                VirtualMachine.Throw<GenIndexOutOfRangeRuntimeError>();
-                modifier = new ProgramRunModifier(true);
-                return;
-            }
+            Frame frame = VirtualMachine.CallStack.Peek();
 
-            Gen gen = VirtualMachine.Cell.Gens[index];
+            Gen gen;
 
-            bool flag = VirtualMachine.ExecuteCondition(gen, out bool errorThrowed);
+            if (frame.PlasmidIndex < 0)
+                gen = VirtualMachine.Cell.Gens[index];
+
+            else gen = VirtualMachine.Cell.Plasmids[frame.PlasmidIndex][index];
+
+            bool flag = VirtualMachine.CheckAllConditions(gen, out bool errorThrowed);
 
             if (errorThrowed)
             {
-                modifier = new ProgramRunModifier(true);
+                modifier = ProgramRunModifier.CreateProgramEnd();
                 return;
             }
 
             if (flag) 
             {
-                modifier = new ProgramRunModifier(index, true);
-            } */
+                modifier = ProgramRunModifier.CreateTranscript(index, true);
+            } 
         }
     }
 }
