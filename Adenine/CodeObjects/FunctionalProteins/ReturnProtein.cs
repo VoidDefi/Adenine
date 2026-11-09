@@ -42,12 +42,25 @@ namespace Adenine.CodeObjects.FunctionalProteins
 
                     VirtualMachine.CurrentEntryPoint.Clear();
                     //VirtualMachine.CurrentEntryPoint.instruction = -1;
-                    return;
+                    entryPoint
                 }
 
                 modifier = new ProgramRunModifier(VirtualMachine.CurrentEntryPoint.gen, true, false, index);
                 VirtualMachine.CurrentEntryPoint.Clear();
             }*/
+
+            EntryPoint entryPoint = VirtualMachine.CallStack.Peek().EntryPoint;
+
+            if (entryPoint.gen < 0 || entryPoint.instruction < 0)
+            {
+                VirtualMachine.Throw<EmptyEntryPointRuntimeError>();
+                modifier = ProgramRunModifier.CreateProgramEnd();
+                return;
+            }
+
+            modifier = ProgramRunModifier.CreateTranscript(entryPoint.gen, false, entryPoint.instruction + 1);
+
+            entryPoint.Clear();
         }
     }
 }

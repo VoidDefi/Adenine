@@ -59,6 +59,7 @@ namespace Adenine.VirtualMachineEngine
         public static bool PassGens(Gen[] gens)
         {
             bool forcefullyExecute = false;
+            int startInstruction = 0;
 
             for (int i = 0; i < gens.Length; i++)
             {
@@ -78,8 +79,10 @@ namespace Adenine.VirtualMachineEngine
 
                     int transcriptGenIndex = -1;
 
-                    for (int j = 0; j < gen.Results.Length; j++)
+                    for (int j = startInstruction; j < gen.Results.Length; j++)
                     {
+                        startInstruction = 0;
+
                         var modifier = ExecuteOneResult(gen.Results[j]);
 
                         if (modifier.HasValue)
@@ -113,6 +116,19 @@ namespace Adenine.VirtualMachineEngine
                                 {
                                     Throw<GenIndexOutOfRangeRuntimeError>();
                                     return true;
+                                }
+
+                                int? instruction = modifier.Value.TranscriptGenIndex.Value;
+
+                                if (instruction.HasValue)
+                                {
+                                    if (instruction < 0)
+                                    {
+                                        Throw<InstructionIndexOutOfRangeRuntimeError>();
+                                        return true;
+                                    }
+
+                                    startInstruction = instruction.Value;
                                 }
 
                                 break;
@@ -150,6 +166,7 @@ namespace Adenine.VirtualMachineEngine
                     {
                         i = transcriptGenIndex - 1;
                         forcefullyExecute = true;
+
                         continue;
                     }
                 }
