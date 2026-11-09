@@ -104,7 +104,7 @@ namespace Adenine
             VirtualMachine.Setup(cell, debugData);
             VirtualMachine.Start();
 
-            Logging.Program.Save();
+            //Logging.Program.Save();
 
             Console.ReadLine();
         }

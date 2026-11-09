@@ -16,7 +16,7 @@ namespace Adenine.CodeObjects.FunctionalProteins
 
         public override void Invoke(float value, ref ProgramRunModifier modifier)
         {
-            int index = (int)value;
+            /*int index = (int)value;
 
             if (index < 0 || index >= VirtualMachine.Cell.Gens.Length)
             {
@@ -38,7 +38,7 @@ namespace Adenine.CodeObjects.FunctionalProteins
             if (flag) 
             {
                 modifier = new ProgramRunModifier(index, true);
-            } 
+            } */
         }
     }
 }

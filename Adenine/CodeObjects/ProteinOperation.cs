@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Adenine.CodeObjects
 {
-    internal enum ProteinOperation
+    public enum ProteinOperation
     {
         Set,
         Add,

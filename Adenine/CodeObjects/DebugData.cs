@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Adenine.CodeObjects
 {
-    internal class DebugData
+    public class DebugData
     {
         public string[] ProteinNames { get; private set; } = [];
 

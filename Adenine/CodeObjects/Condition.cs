@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Adenine.CodeObjects
 {
-    internal struct Condition : ISerializing
+    public struct Condition : ISerializing
     {
         public int ProteinIndex { get; private set; }
 
@@ -52,7 +52,7 @@ namespace Adenine.CodeObjects
 
             string protein = $"p#{ProteinIndex}";
 
-            if (VirtualMachine.IsProgramStarted)
+            if (VirtualMachine.IsStarted)
             {
                 if (ProteinIndex >= 0 && ProteinIndex < VirtualMachine.DebugData.ProteinNames.Length)
                 {
@@ -64,7 +64,7 @@ namespace Adenine.CodeObjects
             {
                 string comparingProtein = $"p#{ComparingProtein}";
 
-                if (VirtualMachine.IsProgramStarted)
+                if (VirtualMachine.IsStarted)
                 {
                     if (ComparingProtein >= 0 && ComparingProtein < VirtualMachine.DebugData.ProteinNames.Length)
                     {

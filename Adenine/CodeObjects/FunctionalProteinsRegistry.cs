@@ -9,7 +9,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Adenine.CodeObjects
 {
-    internal static class FunctionalProteinsRegistry
+    public static class FunctionalProteinsRegistry
     {
         //public static List<FunctionalProtein> Proteins { get; private set; }
 

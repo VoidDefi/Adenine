@@ -1,6 +1,6 @@
 ﻿namespace Adenine.CodeObjects
 {
-    internal enum ComparisonOperator
+    public enum ComparisonOperator
     {
         Equal,
         NotEqual,
@@ -10,7 +10,7 @@
         LessOrEqual
     }
 
-    internal static class ComparisonOperatorParser
+    public static class ComparisonOperatorParser
     {
         public static string ToString(ComparisonOperator comparisonOperator)
         {

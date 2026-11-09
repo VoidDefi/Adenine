@@ -18,7 +18,7 @@ namespace Adenine.CodeObjects.FunctionalProteins
         {
             int index = (int)value;
 
-            modifier = new ProgramRunModifier(index, true);
+            //modifier = new ProgramRunModifier(index, true);
         }
     }
 }

@@ -96,7 +96,7 @@ namespace Adenine
             File.WriteAllText(filePath, stringBuilder.ToString());
         }
 
-        public static class Program
+        /*public static class Program
         {
             static StringBuilder CurrentSession { get; set; }
 
@@ -192,6 +192,6 @@ namespace Adenine
                 EmitLine($"Current Gen: {name}");
                 EmitNewLine();
             }
-        }
+        }*/
     }
 }

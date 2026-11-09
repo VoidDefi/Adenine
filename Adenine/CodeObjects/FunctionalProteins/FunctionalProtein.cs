@@ -2,7 +2,7 @@
 
 namespace Adenine.CodeObjects.FunctionalProteins
 {
-    internal abstract class FunctionalProtein
+    public abstract class FunctionalProtein
     {
         public abstract string Name { get; }
 

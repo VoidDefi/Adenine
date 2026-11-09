@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Adenine.CodeObjects
 {
-    internal class Cell
+    public class Cell
     {
         public float[] Proteins { get; private set; } = [];
 

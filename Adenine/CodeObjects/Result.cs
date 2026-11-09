@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Adenine.CodeObjects
 {
-    internal struct Result : ISerializing
+    public struct Result : ISerializing
     {
         public ProteinOperation Operation { get; private set; }
 

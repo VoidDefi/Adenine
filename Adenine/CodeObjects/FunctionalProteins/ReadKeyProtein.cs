@@ -21,7 +21,7 @@ namespace Adenine.CodeObjects.FunctionalProteins
             if (index < 0 || index >= VirtualMachine.Cell.Proteins.Length)
             {
                 VirtualMachine.Throw<ProteinIndexOutOfRangeRuntimeError>();
-                modifier = new ProgramRunModifier(true);
+                modifier = ProgramRunModifier.CreateProgramEnd();
                 return;
             }
 

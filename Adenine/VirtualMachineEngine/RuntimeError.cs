@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Adenine.VirtualMachineEngine
 {
-    internal abstract class RuntimeError
+    public abstract class RuntimeError
     {
         public abstract string Message { get; }
 
@@ -19,7 +19,7 @@ namespace Adenine.VirtualMachineEngine
 
         public override string ToString()
         {
-            return "Error was throwed " + Trace.ToString() + ": " + Message;
+            return "Error was throwed: " + Message + "\n" + Trace.ToString();
         }
     }
 }

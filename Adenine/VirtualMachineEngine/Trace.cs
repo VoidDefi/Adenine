@@ -6,25 +6,52 @@ using System.Threading.Tasks;
 
 namespace Adenine.VirtualMachineEngine
 {
-    internal struct Trace
+    public struct Trace
     {
-        public string GenName { get; private set; }
+        public Frame[] TracedStack { get; private set; }
 
-        public TraceBlock Block { get; private set; }
+        public TraceBlock TraceBlock { get; private set; }
 
-        public Trace(string genName, TraceBlock block)
+        public Trace(Stack<Frame> stack, TraceBlock traceBlock)
         {
-            GenName = genName;
-            Block = block;
+            if (stack == null) throw new ArgumentNullException(nameof(stack));
+
+            TracedStack = new Frame[stack.Count];
+            stack.CopyTo(TracedStack, 0);
+            TraceBlock = traceBlock;
         }
 
         public override string ToString()
         {
-            return $"in {GenName}/{Block.ToString().ToLower()}";
+            StringBuilder buffer = new StringBuilder();
+            for (int i = 0; i < TracedStack.Length; i++)
+            {
+                Frame frame = TracedStack[i];
+
+                string plasmid = frame.PlasmidIndex == -1 ? "main" : $"plm#{frame.PlasmidIndex}";
+                string gen = $"g#{frame.GenIndex}";
+
+                /*if (VirtualMachine.DebugData != null)
+                {
+                    gen = VirtualMachine.DebugData.GenNames[frame.GenIndex];
+                }*/
+
+                buffer.Append($"  at {plasmid}: {gen}");
+
+                if (i == 0)
+                {
+                    buffer.Append($" in {TraceBlock}");
+                }
+
+                if (i < TracedStack.Length - 1)
+                buffer.Append("\n");
+            }
+
+            return buffer.ToString();
         }
     }
 
-    internal enum TraceBlock
+    public enum TraceBlock
     {
         Condition,
         Result

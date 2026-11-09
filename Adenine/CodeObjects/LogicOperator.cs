@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Adenine.CodeObjects
 {
-    internal enum LogicOperator
+    public enum LogicOperator
     {
         None,
         And,

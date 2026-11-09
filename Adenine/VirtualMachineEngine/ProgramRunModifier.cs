@@ -6,35 +6,41 @@ using System.Threading.Tasks;
 
 namespace Adenine.VirtualMachineEngine
 {
-    internal struct ProgramRunModifier
+    public struct ProgramRunModifier
     {
         public bool NeedEnd { get; private set; } = false;
 
-        public bool NeedGoto { get; private set; } = false;
+        public bool NeedExitFrom { get; private set; } = false;
 
-        public EntryPoint GotoEndPoint { get; private set; } = new();
+        public int? InjectedPlasmidIndex { get; private set; } = null; 
 
-        public bool ForcedlyExecuteJumpedGen { get; private set; } = false;
-
-        public bool SaveEntryPoint { get; private set; } = true;
-
-        public ProgramRunModifier(bool needEnd)
-        {
-            NeedEnd = needEnd;
-            NeedGoto = false;
-            GotoEndPoint.Clear();
-            ForcedlyExecuteJumpedGen = false;
-            SaveEntryPoint = true;
-        }
-
-        public ProgramRunModifier(int gotoIndex, bool forcedlyExecute, bool saveEntryPoint = true, int gotoIndexProtein = -1)
+        public ProgramRunModifier()
         {
             NeedEnd = false;
-            NeedGoto = true;
-            GotoEndPoint.gen = gotoIndex;
-            GotoEndPoint.instruction = gotoIndexProtein;
-            ForcedlyExecuteJumpedGen = forcedlyExecute;
-            SaveEntryPoint = saveEntryPoint;
+        }
+
+        public static ProgramRunModifier CreateProgramEnd()
+        {
+            ProgramRunModifier modifier = new();
+            modifier.NeedEnd = true;
+
+            return modifier;
+        }
+
+        public static ProgramRunModifier CreateExitFrom()
+        {
+            ProgramRunModifier modifier = new();
+            modifier.NeedExitFrom = true;
+
+            return modifier;
+        }
+
+        public static ProgramRunModifier CreateInject(int plasmid)
+        {
+            ProgramRunModifier modifier = new();
+            modifier.InjectedPlasmidIndex = plasmid;
+
+            return modifier;
         }
     }
 }

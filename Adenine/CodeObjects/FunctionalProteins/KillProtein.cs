@@ -2,7 +2,7 @@
 
 namespace Adenine.CodeObjects.FunctionalProteins
 {
-    internal class KillProtein : FunctionalProtein
+    public class KillProtein : FunctionalProtein
     {
         public override string Name => "kill";
 
@@ -10,7 +10,7 @@ namespace Adenine.CodeObjects.FunctionalProteins
 
         public override void Invoke(float value, ref ProgramRunModifier modifier)
         {
-            modifier = new ProgramRunModifier(true);
+            modifier = ProgramRunModifier.CreateProgramEnd();
         }
     }
 }

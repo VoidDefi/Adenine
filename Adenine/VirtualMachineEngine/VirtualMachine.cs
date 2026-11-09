@@ -1,372 +1,375 @@
 ﻿using Adenine.CodeObjects;
 using Adenine.CodeObjects.FunctionalProteins;
 using Adenine.VirtualMachineEngine.RuntimeErrors;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Adenine.VirtualMachineEngine
 {
-    internal static class VirtualMachine
+    public static class VirtualMachine
     {
         public static Cell Cell { get; private set; }
 
         public static DebugData DebugData { get; private set; }
 
-        public static bool IsProgramStarted { get; private set; }
+        public static bool IsStarted { get; private set; }
 
-        public static int GenIndex { get; private set; }
+        public static long Iteration { get; private set; }
 
-        private static TraceBlock CurrentBlock { get; set; }
+        public static int CurrentPlasmidIndex { get; private set; } = -1;
 
-        public static int StepTimeMs { get; set; } = 0;
+        public static int CurrentGenIndex { get; private set; }
 
-        public static bool LoggingActivated { get; set; } = false;
+        public static int CurrentInstruction { get; private set; } = -1;
 
-        public static EntryPoint CurrentEntryPoint { get; set; } = new EntryPoint();
+        public static Stack<Frame> CallStack { get; private set; }
 
-        public static long IterationCounter { get; set; } = 0;
+        private static TraceBlock traceBlock = TraceBlock.Result;
 
-        public static void Setup(Cell cell, DebugData debugData)
+        public static void Setup(Cell cell, DebugData debugData = null)
         {
-            if (cell == null) throw new ArgumentNullException(nameof(cell));
+            Cell = cell;
+            DebugData = debugData;
 
-            if (!IsProgramStarted)
-            {
-                Cell = cell;
-                DebugData = debugData;
+            CallStack = new Stack<Frame>();
 
-                GenIndex = 0;
-                CurrentBlock = 0;
-                CurrentEntryPoint.Clear();
-                IterationCounter = 0;
-            }
+            IsStarted = false;
+            Iteration = 0;
         }
 
         public static void Start()
         {
-            if (Cell == null) return;
+            IsStarted = true;
 
-            IsProgramStarted = true;
+            CallStack.Push(new Frame(-1));
 
-            if (LoggingActivated)
-            Logging.Program.Start();
-
-
-            bool forcedlyExecute = false;
-            int instructionStartIndex = 0;
-
-            while (IsProgramStarted)
+            while (IsStarted)
             {
-                CurrentEntryPoint.Clear();
+                bool needEnd = PassGens(Cell.Gens);
 
-                for (int i = 0; i < Cell.Gens.Length; i++)
+                if (needEnd)
                 {
-                    if (StepTimeMs > 0)
-                        Thread.Sleep(StepTimeMs);
-
-                    Logging.Program.EmitLine($"Main iterate: {IterationCounter}");
-
-                    Gen gen = Cell.Gens[i];
-                    GenIndex = i;
-
-                    CurrentBlock = TraceBlock.Condition;
-
-                    Logging.Program.EmitCurrentGen();
-                    Logging.Program.EmitCurrentProteinsState();
-                    Logging.Program.EmitLine("condition: ");
-
-                    bool needGoto = false;
-
-                    bool resultFlag = false;
-
-                    if (!forcedlyExecute)
-                    {
-                        resultFlag = ExecuteCondition(gen, out bool hasError);
-
-                        if (hasError) return;
-                    }
-
-                    if (resultFlag || forcedlyExecute)
-                    {
-                        forcedlyExecute = false;
-
-                        Logging.Program.EmitLine("result: ");
-
-                        CurrentBlock = TraceBlock.Result;
-
-                        for (int j = instructionStartIndex; j < gen.Results.Length; j++)
-                        {
-                            if (instructionStartIndex > 0) 
-                                instructionStartIndex = 0;
-
-                            Result result = gen.Results[j];
-
-                            float value = result.Value;
-
-                            if (result.UseProteinValue)
-                            {
-                                if (IsInvalidProteinIndex(result.InputProtein))
-                                {
-                                    Throw<ProteinIndexOutOfRangeRuntimeError>();
-                                    return;
-                                }
-
-                                if (result.GetValueFrom)
-                                {
-                                    int index = (int)Cell.Proteins[result.InputProtein];
-
-                                    if (IsInvalidProteinIndex(index))
-                                    {
-                                        Throw<ProteinIndexOutOfRangeRuntimeError>();
-                                        return;
-                                    }
-
-                                    value = Cell.Proteins[index];
-                                }
-                                else 
-                                {
-                                    value = Cell.Proteins[result.InputProtein];
-                                } 
-                            }
-
-                            if (result.Action)
-                            {
-                                if (result.Operation != ProteinOperation.Set)
-                                    throw new Exception("invalid signature");
-
-                                if (FunctionalProteinsRegistry.Proteins.TryGetValue(result.ProteinIndex, out FunctionalProtein action))
-                                {
-                                    if (action == null)
-                                    {
-                                        Throw<NotExistFunctionalProteinRuntimeError>();
-                                        return;
-                                    }
-
-                                    ProgramRunModifier modifier = new();
-
-                                    action.Invoke(value, ref modifier);
-
-                                    if (modifier.NeedEnd)
-                                        return;
-
-                                    if (modifier.NeedGoto)
-                                    {
-                                        int index = modifier.GotoEndPoint.gen;
-                                        int instructionIndex = modifier.GotoEndPoint.instruction;
-
-                                        if (index < 0 || index >= Cell.Gens.Length)
-                                        {
-                                            Throw<GenIndexOutOfRangeRuntimeError>();
-                                            return;
-                                        }
-                                        if (instructionIndex >= Cell.Gens[index].Results.Length)
-                                        {
-                                            Throw<InstructionIndexOutOfRangeRuntimeError>();
-                                            return;
-                                        }
-
-                                        needGoto = true;
-                                        forcedlyExecute = modifier.ForcedlyExecuteJumpedGen;
-
-                                        if (modifier.SaveEntryPoint)
-                                        {
-                                            CurrentEntryPoint.gen = i;
-                                            CurrentEntryPoint.instruction = j;
-                                        }
-
-                                        i = index;
-                                        GenIndex = index;
-
-                                        if (instructionIndex >= 0) 
-                                            instructionStartIndex = instructionIndex;
-
-                                        break;
-                                    }
-                                }
-
-                                else
-                                {
-                                    Throw<NotExistFunctionalProteinRuntimeError>();
-                                    return;
-                                }
-                            }
-
-                            else
-                            {
-                                if (IsInvalidProteinIndex(result.ProteinIndex))
-                                {
-                                    Throw<ProteinIndexOutOfRangeRuntimeError>();
-                                    return;
-                                }
-
-                                int proteinIndex = result.ProteinIndex;
-
-                                if (result.Pointer)
-                                {
-                                    proteinIndex = (int)Cell.Proteins[proteinIndex];
-
-                                    if (IsInvalidProteinIndex(proteinIndex))
-                                    {
-                                        Throw<ProteinIndexOutOfRangeRuntimeError>();
-                                        return;
-                                    }
-                                }
-
-                                switch (result.Operation)
-                                {
-                                    case ProteinOperation.Set:
-                                        Cell.Proteins[proteinIndex] = value;
-                                        break;
-                                    case ProteinOperation.Add:
-                                        Cell.Proteins[proteinIndex] += value;
-                                        break;
-                                    case ProteinOperation.Subtract:
-                                        Cell.Proteins[proteinIndex] -= value;
-                                        break;
-                                    case ProteinOperation.Multiply:
-                                        Cell.Proteins[proteinIndex] *= value;
-                                        break;
-                                    case ProteinOperation.Divide:
-
-                                        if (value == 0)
-                                        {
-                                            Throw<DivisionByZeroRuntimeError>();
-                                            return;
-                                        }
-
-                                        Cell.Proteins[proteinIndex] /= value;
-                                        break;
-                                    case ProteinOperation.DivideByModule:
-
-                                        if (value == 0)
-                                        {
-                                            Throw<DivisionByZeroRuntimeError>();
-                                            return;
-                                        }
-
-                                        Cell.Proteins[proteinIndex] %= value;
-                                        break;
-                                }
-                            }
-                        }
-                    }
-
-                    if (needGoto)
-                    {
-                        i--;
-                        continue;
-                    }
+                    IsStarted = false;
+                    break;
                 }
 
-                IterationCounter++;
-
-                if (Console.CapsLock)
-                {
-                    IsProgramStarted = false;
-                    return;
-                }
+                Iteration++;
             }
         }
 
-        public static bool ExecuteCondition(Gen gen, out bool errorThrowed)
+        public static bool PassGens(Gen[] gens)
         {
-            bool resultFlag = false;
-            LogicOperator logicOperator = LogicOperator.None;
-
-            for (int j = 0; j < gen.Conditions.Length; j++)
+            for (int i = 0; i < gens.Length; i++)
             {
-                Condition condition = gen.Conditions[j];
+                Gen gen = gens[i];
+                CallStack.Peek().GenIndex = i;
 
-                if (IsInvalidProteinIndex(condition.ProteinIndex))
+                if (gen == null) throw new NullReferenceException();
+
+                bool isSuccess = CheckAllConditions(gen, out bool errorThrowed);
+
+                if (errorThrowed)
+                    return true;
+
+                if (isSuccess)
+                {
+                    for (int j = 0; j < gen.Results.Length; j++)
+                    {
+                        var modifier = ExecuteOneResult(gen.Results[j]);
+
+                        if (modifier.HasValue)
+                        {
+                            if (modifier.Value.NeedEnd)
+                                return true;
+
+                            if (modifier.Value.NeedExitFrom)
+                            {
+                                if (CallStack.Count <= 1)
+                                {
+                                    Throw<CanNotExitFromMainRuntimeError>();
+                                    return true;
+                                }
+
+                                return false;
+                            }
+
+                            if (modifier.Value.InjectedPlasmidIndex.HasValue)
+                            {
+                                int plasmidIndex = modifier.Value.InjectedPlasmidIndex.Value;
+
+                                if (plasmidIndex < 0 || plasmidIndex >= Cell.Plasmids.Length)
+                                {
+                                    Throw<PlasmidIndexOutOfRangeRuntimeError>();
+                                    return true;
+                                }
+
+                                if (CallStack.Count > 1000)
+                                {
+                                    Throw<StackOverflowRuntimeError>();
+                                    return true;
+                                }
+
+                                CallStack.Push(new Frame(plasmidIndex));
+
+                                bool needEnd = PassGens(Cell.Plasmids[plasmidIndex].ToArray());
+
+                                if (needEnd)
+                                    return true;
+
+                                CallStack.Pop();
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public static ProgramRunModifier? ExecuteOneResult(Result result)
+        {
+            float value = result.Value;
+
+            if (result.UseProteinValue)
+            {
+                if (IsInvalidProteinIndex(result.InputProtein))
                 {
                     Throw<ProteinIndexOutOfRangeRuntimeError>();
+                    return ProgramRunModifier.CreateProgramEnd();
+                }
+
+                if (result.GetValueFrom)
+                {
+                    int index = (int)Cell.Proteins[result.InputProtein];
+
+                    if (IsInvalidProteinIndex(index))
+                    {
+                        Throw<ProteinIndexOutOfRangeRuntimeError>();
+                        return ProgramRunModifier.CreateProgramEnd();
+                    }
+
+                    value = Cell.Proteins[index];
+                }
+                else
+                {
+                    value = Cell.Proteins[result.InputProtein];
+                }
+            }
+
+            if (result.Action)
+            {
+                if (result.Operation != ProteinOperation.Set)
+                    throw new Exception("invalid signature");
+
+                if (FunctionalProteinsRegistry.Proteins.TryGetValue(result.ProteinIndex, out FunctionalProtein action))
+                {
+                    if (action == null)
+                    {
+                        Throw<NotExistFunctionalProteinRuntimeError>();
+                        return ProgramRunModifier.CreateProgramEnd();
+                    }
+
+                    ProgramRunModifier modifier = new();
+
+                    action.Invoke(value, ref modifier);
+
+                    return modifier;
+                }
+            }
+
+            else
+            {
+                if (IsInvalidProteinIndex(result.ProteinIndex))
+                {
+                    Throw<ProteinIndexOutOfRangeRuntimeError>();
+                    return ProgramRunModifier.CreateProgramEnd();
+                }
+
+                int proteinIndex = result.ProteinIndex;
+
+                if (result.Pointer)
+                {
+                    proteinIndex = (int)Cell.Proteins[proteinIndex];
+
+                    if (IsInvalidProteinIndex(proteinIndex))
+                    {
+                        Throw<ProteinIndexOutOfRangeRuntimeError>();
+                        return ProgramRunModifier.CreateProgramEnd();
+                    }
+                }
+
+                switch (result.Operation)
+                {
+                    case ProteinOperation.Set:
+                        Cell.Proteins[proteinIndex] = value;
+                        break;
+                    case ProteinOperation.Add:
+                        Cell.Proteins[proteinIndex] += value;
+                        break;
+                    case ProteinOperation.Subtract:
+                        Cell.Proteins[proteinIndex] -= value;
+                        break;
+                    case ProteinOperation.Multiply:
+                        Cell.Proteins[proteinIndex] *= value;
+                        break;
+                    case ProteinOperation.Divide:
+
+                        if (value == 0)
+                        {
+                            Throw<DivisionByZeroRuntimeError>();
+                            return ProgramRunModifier.CreateProgramEnd();
+                        }
+
+                        Cell.Proteins[proteinIndex] /= value;
+                        break;
+                    case ProteinOperation.DivideByModule:
+
+                        if (value == 0)
+                        {
+                            Throw<DivisionByZeroRuntimeError>();
+                            return ProgramRunModifier.CreateProgramEnd();
+                        }
+
+                        Cell.Proteins[proteinIndex] %= value;
+                        break;
+                }
+            }
+
+            return null;
+        }
+
+        public static bool CheckAllConditions(Gen gen, out bool errorThrowed)
+        {
+            if (gen == null) 
+            { 
+                errorThrowed = false;
+                return false; 
+            }
+
+            int count = gen.Conditions.Length;
+
+            if (count == 1)
+            {
+                bool result = CheckOneCondition(gen.Conditions[0], out bool hasError);
+                errorThrowed = hasError;
+                return result;
+            }
+
+            else if (count > 1)
+            {
+                bool result = CheckOneCondition(gen.Conditions[0], out bool hasError);
+
+                if (hasError)
+                {
                     errorThrowed = true;
                     return false;
                 }
 
-                float proteinValue = Cell.Proteins[condition.ProteinIndex];
-
-                float comparingValue = condition.Value;
-
-                if (condition.UseProteinValue)
+                for (int i = 1; i < count; i++)
                 {
-                    if (IsInvalidProteinIndex(condition.ComparingProtein))
+                    Condition condition = gen.Conditions[i];
+                    bool currentResult = CheckOneCondition(condition, out bool hasError1);
+
+                    if (hasError1)
                     {
-                        Throw<ProteinIndexOutOfRangeRuntimeError>();
                         errorThrowed = true;
                         return false;
                     }
 
-                    comparingValue = Cell.Proteins[condition.ComparingProtein];
+                    switch (gen.Conditions[i - 1].LogicOperator)
+                    {
+                        case LogicOperator.And:
+                            result = result && currentResult;
+                            break;
+                        case LogicOperator.Or:
+                            result = result || currentResult;
+                            break;
+                    }
                 }
 
-                bool flag = false;
-
-                //comparing
-                switch (condition.Operator)
-                {
-                    case ComparisonOperator.Equal:
-                        flag = proteinValue == comparingValue;
-                        break;
-                    case ComparisonOperator.NotEqual:
-                        flag = proteinValue != comparingValue;
-                        break;
-                    case ComparisonOperator.Greater:
-                        flag = proteinValue > comparingValue;
-                        break;
-                    case ComparisonOperator.Less:
-                        flag = proteinValue < comparingValue;
-                        break;
-                    case ComparisonOperator.LessOrEqual:
-                        flag = proteinValue <= comparingValue;
-                        break;
-                    case ComparisonOperator.GreaterOrEqual:
-                        flag = proteinValue >= comparingValue;
-                        break;
-                }
-
-                if (logicOperator == LogicOperator.None)
-                {
-                    resultFlag = flag;
-                }
-
-                else
-                {
-                    if (logicOperator == LogicOperator.And)
-                        resultFlag = resultFlag && flag;
-
-                    else if (logicOperator == LogicOperator.Or)
-                        resultFlag = resultFlag || flag;
-                }
-
-                logicOperator = condition.LogicOperator;
+                errorThrowed = false;
+                return result;
             }
 
             errorThrowed = false;
-            return resultFlag;
+            return false;
+        }
+
+        private static bool CheckOneCondition(Condition condition, out bool errorThrowed)
+        {
+            traceBlock = TraceBlock.Condition;
+
+            if (IsInvalidProteinIndex(condition.ProteinIndex))
+            {
+                Throw<ProteinIndexOutOfRangeRuntimeError>();
+                errorThrowed = true;
+                traceBlock = TraceBlock.Result;
+                return false;
+            }
+
+            float proteinValue = Cell.Proteins[condition.ProteinIndex];
+
+            float comparingValue = condition.Value;
+
+            if (condition.UseProteinValue)
+            {
+                if (IsInvalidProteinIndex(condition.ComparingProtein))
+                {
+                    Throw<ProteinIndexOutOfRangeRuntimeError>();
+                    errorThrowed = true;
+                    traceBlock = TraceBlock.Result;
+                    return false;
+                }
+
+                comparingValue = Cell.Proteins[condition.ComparingProtein];
+            }
+
+            bool flag = false;
+
+            //comparing
+            switch (condition.Operator)
+            {
+                case ComparisonOperator.Equal:
+                    flag = proteinValue == comparingValue;
+                    break;
+                case ComparisonOperator.NotEqual:
+                    flag = proteinValue != comparingValue;
+                    break;
+                case ComparisonOperator.Greater:
+                    flag = proteinValue > comparingValue;
+                    break;
+                case ComparisonOperator.Less:
+                    flag = proteinValue < comparingValue;
+                    break;
+                case ComparisonOperator.LessOrEqual:
+                    flag = proteinValue <= comparingValue;
+                    break;
+                case ComparisonOperator.GreaterOrEqual:
+                    flag = proteinValue >= comparingValue;
+                    break;
+            }
+
+            errorThrowed = false;
+            traceBlock = TraceBlock.Result;
+            return flag;
         }
 
         private static void Throw(RuntimeError error)
         {
             Console.WriteLine();
             Console.WriteLine(error.ToString());
-            Logging.Program.EmitError(error);
+            //Logging.Program.EmitError(error);
 
-            IsProgramStarted = false;
+            IsStarted = false;
         }
 
         public static void Throw<T>() where T : RuntimeError
         {
-            Throw(Activator.CreateInstance(typeof(T), [GetTrace()]) as RuntimeError);
+            Throw(Activator.CreateInstance(typeof(T), [GetTrace()]) as RuntimeError ?? throw new Exception());
         }
 
         private static Trace GetTrace()
         {
-            if (GenIndex < 0 || GenIndex >= (Cell?.Gens.Length ?? -1))
+            /*if (GenIndex < 0 || GenIndex >= (Cell?.Gens.Length ?? -1))
                 throw new IndexOutOfRangeException("gen index was outside the bounds of the gens");
 
             string genName = $"g#{GenIndex}";
@@ -379,7 +382,9 @@ namespace Adenine.VirtualMachineEngine
                 genName = DebugData.GenNames[GenIndex];
             }
 
-            return new Trace(genName, CurrentBlock);
+            return new Trace(genName, CurrentBlock, null);*/
+
+            return new Trace(CallStack, traceBlock);
         }
 
         private static bool IsInvalidProteinIndex(int index)

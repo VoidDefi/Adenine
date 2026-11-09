@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/AdenineTests/AdenineTests.csproj
+/AdenineTests/AdenineTests.csproj
+/AdenineTests/CheckAllConditionsTests.cs
+/AdenineTests/TestSettings.cs
+/AdenineTests/ExecuteOneResultTests.cs
+/AdenineTests/TestUtils.cs
