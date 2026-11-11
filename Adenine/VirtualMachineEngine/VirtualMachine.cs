@@ -2,6 +2,7 @@
 using Adenine.CodeObjects.FunctionalProteins;
 using Adenine.VirtualMachineEngine.RuntimeErrors;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 namespace Adenine.VirtualMachineEngine
 {
@@ -62,7 +63,7 @@ namespace Adenine.VirtualMachineEngine
             int startInstruction = 0;
 
             for (int i = 0; i < gens.Length; i++)
-            {
+            {   
                 Gen gen = gens[i];
                 CallStack.Peek().GenIndex = i;
 
@@ -118,7 +119,7 @@ namespace Adenine.VirtualMachineEngine
                                     return true;
                                 }
 
-                                int? instruction = modifier.Value.TranscriptGenIndex.Value;
+                                int? instruction = modifier.Value.TranscriptInstructionIndex;
 
                                 if (instruction.HasValue)
                                 {
@@ -169,6 +170,8 @@ namespace Adenine.VirtualMachineEngine
 
                         continue;
                     }
+
+                    startInstruction = 0;
                 }
             }
 
