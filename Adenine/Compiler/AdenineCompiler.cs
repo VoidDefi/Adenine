@@ -310,7 +310,14 @@ namespace Adenine.Compiler
                         {
                             if (treeToken.Branch.Count >= 2)
                             {
-                                genNames.Add(token);
+                                Token name = token;
+
+                                if (scopeName.HasValue)
+                                {
+                                    name.Text = scopeName.Value.Text + "." + name.Text;
+                                }
+
+                                genNames.Add(name);
                                 genDefine = true;
                             }
 
@@ -471,6 +478,7 @@ namespace Adenine.Compiler
                 genNames,
                 genConditions,
                 genResults,
+                scopes,
                 out Dictionary<string, List<NotCompiledCondition>> conditions,
                 out Dictionary<string, List<NotCompiledResult>> results,
                 out List<Error> processErrors
@@ -847,8 +855,20 @@ namespace Adenine.Compiler
                             }
 
                             if (index < 0)
-                                throw new Exception();
+                            {
+                                bool isUsed = false;
 
+                                foreach (var genIndexes in gensMap)
+                                {
+                                    if (genIndexes.Value.Contains(i))
+                                    {
+                                        isUsed = true;
+                                    }
+                                }
+
+                                if (isUsed)
+                                    throw new Exception();
+                            }
                             compiledResults[resultBlock.Key].Add
                             (
                                 new Result(operation, action, proteinIndex, pointer, (float)index)
@@ -954,7 +974,8 @@ namespace Adenine.Compiler
         (
             List<Token> genNames, 
             List<List<Token>> genConditions, 
-            List<List<TokenTreeObject>> genResults, 
+            List<List<TokenTreeObject>> genResults,
+            List<(Token token, int start, int end)> scopes,
             out Dictionary<string, List<NotCompiledCondition>> conditions, 
             out Dictionary<string, List<NotCompiledResult>> results, 
             out List<Error> errors
@@ -987,6 +1008,18 @@ namespace Adenine.Compiler
             for (int i = 0; i < genConditions.Count; i++)
             {
                 List<Token> tokens = genConditions[i];
+                Token? scopeName = null;
+
+                for (int j = 0; j < scopes.Count; j++)
+                {
+                    var scope = scopes[j];
+
+                    if (i >= scope.start && i < scope.end)
+                    {
+                        scopeName = scope.token;
+                        break;
+                    }
+                }
 
                 conditions.Add(genNames[i].Text, new());
 
@@ -1101,7 +1134,10 @@ namespace Adenine.Compiler
                                     errors.Add(new NotAvailableInContextError(token.LineNumber));
                                 }
 
-                                else protein = token;
+                                else 
+                                {
+                                    protein = TryToFullNameProtein(token, scopeName, errors); 
+                                }
                             }
 
                             else errors.Add(new ReservedNameError(token.LineNumber));
@@ -1217,6 +1253,19 @@ namespace Adenine.Compiler
             {
                 results.Add(genNames[i].Text, new());
 
+                Token? scopeName = null;
+
+                for (int j = 0; j < scopes.Count; j++)
+                {
+                    var scope = scopes[j];
+
+                    if (i >= scope.start && i < scope.end)
+                    {
+                        scopeName = scope.token;
+                        break;
+                    }
+                }
+
                 List<TokenTreeObject> currentBranch = genResults[i];
                 Stack<(List<TokenTreeObject> branch, int lastIndex)> stack = new();
 
@@ -1321,7 +1370,15 @@ namespace Adenine.Compiler
 
                                     if (pointerIndex < 0)
                                     {
-                                        protein = token;
+                                        if (action)
+                                        {
+                                            protein = token;
+                                        }
+
+                                        else
+                                        {
+                                            protein = TryToFullNameProtein(token, scopeName, errors);
+                                        } 
                                     }
 
                                     else if (pointerIndex == 0)
@@ -1329,6 +1386,7 @@ namespace Adenine.Compiler
                                         string name = token.Text.Substring(1);
 
                                         protein = new Token(name, token.LineNumber);
+                                        protein = TryToFullNameProtein(protein.Value, scopeName, errors);
                                         isPointer = true;
                                     }
 
@@ -1373,10 +1431,10 @@ namespace Adenine.Compiler
 
                                         else
                                         {
-                                            inputVar = firstToken;
+                                            inputVar = TryToFullNameProtein(firstToken, scopeName, errors);
                                         }
 
-                                        //getlink getgen valuefrom
+                                        //getlink getgen valuefrom getplasmid
                                         if (branch.Count >= 4)
                                         {
                                             if (value != null)
@@ -1390,10 +1448,16 @@ namespace Adenine.Compiler
                                                 translateMode = NameTranslateMode.GetLink;
 
                                             else if (secondToken.Text == ReservedNames.GetGen)
+                                            {
                                                 translateMode = NameTranslateMode.GetGen;
+                                            }
 
                                             else if (secondToken.Text == ReservedNames.GetPlasmid)
+                                            {
+                                                //так как plasmid.plasmid - звучит тупо
+                                                inputVar = firstToken;
                                                 translateMode = NameTranslateMode.GetPlasmid;
+                                            }
 
                                             else if (secondToken.Text == ReservedNames.ValueFrom)
                                                 valueFrom = true;
@@ -1518,6 +1582,39 @@ namespace Adenine.Compiler
                    symbol != '\a' && symbol != '\b' &&
                    symbol != '\f' && symbol != '\0' &&
                    symbol != ' ';
+        }
+
+        private static Token TryToFullNameProtein(Token name, Token? scopeName, List<Error> errors)
+        {
+            if (scopeName.HasValue)
+            {
+                int dotIndex = name.Text.IndexOf('.');
+
+                if (dotIndex <= -1)
+                {
+                    name.Text = scopeName.Value.Text + "." + name.Text;
+                }
+
+                else
+                {
+                    if (name.Text.Count(c => c == '.') > 1)
+                    {
+                        errors.Add(new ManyDotsInProteinNameError(name.LineNumber));
+                    }
+
+                    if (dotIndex == 0) //.name -> name
+                    {
+                        name.Text = name.Text.Remove(0, 1);
+                    }
+
+                    if (dotIndex == name.Text.Length - 1)
+                    {
+                        errors.Add(new DotInEndOfProteinNameError(name.LineNumber));
+                    }
+                }
+            }
+
+            return name;
         }
     }
 }
