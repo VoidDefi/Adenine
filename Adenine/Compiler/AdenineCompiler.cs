@@ -13,7 +13,9 @@ namespace Adenine.Compiler
             debugData = null;
             errors = new();
 
-            List<Line> lines = SplitLines(code);
+            List<Line> lines = Preprocessor.GetProcessedCode(code, errors);
+            if (errors.Count > 0) return null;
+
             List<Token> tokens = SplitTokens(lines);
 
             List<TokenTreeObject> tokenTree = CreateTokensTree(tokens);
@@ -36,7 +38,7 @@ namespace Adenine.Compiler
 
         #region Code Splits
 
-        private static List<Line> SplitLines(string code)
+        internal static List<Line> SplitLines(string code)
         {
             string[] rawLines = (code + "\r").Split("\n");
             List<Line> lines = new List<Line>();
@@ -1575,7 +1577,7 @@ namespace Adenine.Compiler
             return;
         }
 
-        private static bool IsNotSpace(char symbol)
+        internal static bool IsNotSpace(char symbol)
         {
             return symbol != '\r' && symbol != '\n' &&
                    symbol != '\t' && symbol != '\v' &&

@@ -52,6 +52,8 @@ namespace Adenine.Compiler.Registry
 
         public static string EndScope => "~endscope";
 
+        public static string Insert => "~insert";
+
         public static string[] Registry { get; private set; } = [];
 
         public static void SetupRegistry()
