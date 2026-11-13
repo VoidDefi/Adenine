@@ -1,0 +1,201 @@
+//writeIntNum
+//
+//description:
+// write intenger number to the console
+//
+// WARNING!!! 
+//  DOES NOT GUARANTEE ACCURATE OUTPUT 
+//  FOR NUMBERS WITH MORE THAN 5 DIGITS
+//
+//args:
+// value-arg
+//
+//return:
+// .
+
+gen setup
+{
+	condition
+	{
+		not exist noway
+	}
+
+	result
+	{
+		set noway(0) next
+		set anyway(1) next
+		
+		set rank(10000000000000000000000000000000000000) next
+		set is-num-started(0)
+	}
+}
+
+gen ifNegative
+{
+	condition
+	{
+		value-arg < 0
+	}
+
+	result
+	{
+		set action write(45) next //-
+		mul value-arg(-1)
+	}
+}
+
+//loop
+
+gen loopMark
+{
+	condition
+	{
+		not exist anyway
+	}
+
+	result
+	{
+		set noway(0)
+	}
+}
+
+gen MainExitFromLoop
+{
+	condition
+	{
+		rank < 0.1
+	}
+
+	result
+	{
+		set action transcript(loopEndMark getgen)
+	}
+}
+
+gen findRawNumeral
+{
+	condition
+	{
+		exist anyway
+	}
+
+	result
+	{
+		set numeral(value-arg) next
+		div numeral(rank)
+	}
+}
+
+gen findNumStart
+{
+	condition
+	{
+		numeral >= 1
+	}
+
+	result
+	{
+		set is-num-started(1)
+	}
+}
+
+gen ifNumNotStarted
+{
+	condition
+	{
+		not exist is-num-started
+	}
+
+	result
+	{
+		set action transcript(decrementRank getgen)
+	}
+}
+
+//if num is started
+
+gen findRealNumeral
+{
+	condition
+	{
+		numeral >= 10
+	}
+
+	result
+	{
+		mod numeral(10)
+	}
+}
+
+gen exitIfNumeralNegative
+{
+	condition
+	{
+		numeral < 0
+	}
+
+	result
+	{
+		set action transcript(loopEndMark getgen)
+	}
+}
+
+gen writeNumeral
+{
+	condition
+	{
+		exist anyway
+	}
+
+	result
+	{
+		set numeral-char(48) next //0
+		add numeral-char(numeral) next
+		
+		set action write(numeral-char)
+	}
+}
+
+//end if num is started
+
+gen decrementRank
+{
+	condition
+	{
+		exist anyway
+	}
+
+	result
+	{
+		div rank(10) next
+		set action transcript(loopMark getgen)
+	}
+}
+
+gen loopEndMark
+{
+	condition
+	{
+		not exist anyway
+	}
+
+	result
+	{
+		set anyway(1)
+	}
+}
+
+//endloop
+
+gen exit
+{
+	condition
+	{
+		exist anyway
+	}
+
+	result
+	{
+		set value-arg(0)
+	}
+}

@@ -1,0 +1,85 @@
+//clamp
+//
+//description:
+// limits the value (value-arg) within a given range (min-arg, max-arg)
+//
+//args:
+// value-arg
+// min-arg
+// max-arg
+//
+//return:
+// value-ret
+
+gen setup
+{
+	condition
+	{
+		not exist noway
+	}
+
+	result
+	{
+		set noway(0) next
+		set anyway(1) next
+		
+		set value-ret(value-arg) 
+	}
+}
+
+gen checkError
+{
+	condition
+	{
+		min-arg > max-arg
+	}
+
+	result
+	{
+		set action kill(0)
+	}
+}
+
+gen clampMinValue
+{
+	condition
+	{
+		value-arg < min-arg
+	}
+
+	result
+	{
+		set value-ret(min-arg)
+	}
+}
+
+gen clampMaxValue
+{
+	condition
+	{
+		value-arg > max-arg
+	}
+
+	result
+	{
+		set value-ret(max-arg)
+	}
+}
+
+
+gen exit
+{
+	condition
+	{
+		exist anyway
+	}
+
+	result
+	{
+		set value-arg(0) next
+		set min-arg(0) next
+		set max-arg(0)
+	}
+}
+
+//exit from plasmid
