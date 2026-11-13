@@ -1,0 +1,41 @@
+//abs
+//
+//description:
+// returns the absolute value (value-ret) of value (value-arg)
+//
+//args:
+// value-arg
+//
+//return:
+// value-ret
+
+gen setup
+{
+	condition
+	{
+		value-arg > 0
+	}
+
+	result
+	{
+		set value-ret(value-arg) next
+		set value-arg(0) next
+		set action exit-from(0)
+	}
+}
+
+gen ifNegative
+{
+	condition
+	{
+		value-arg <= 0
+	}
+
+	result
+	{
+		set value-ret(value-arg) next
+		mul value-ret(-1) next
+		set value-arg(0) next
+		set action exit-from(0)
+	}
+}
