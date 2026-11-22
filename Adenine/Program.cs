@@ -20,7 +20,7 @@ namespace Adenine
             ReservedSymbols.SetupRegistry();
             FunctionalProteinsRegistry.Setup();
 
-            Console.WriteLine("Adenine Lang was started. enter 'help' to get all tool modes.");
+            Console.WriteLine("Adenine Lang was started. Enter 'help' to get all tool modes.");
 
             while (true)
             {
@@ -129,6 +129,10 @@ namespace Adenine
             }
 
             Console.WriteLine();
+
+            Thread.Sleep(3);
+
+            Console.Clear();
 
             VirtualMachine.Setup(cell, debugData);
             VirtualMachine.Start();
