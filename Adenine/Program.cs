@@ -20,13 +20,42 @@ namespace Adenine
             ReservedSymbols.SetupRegistry();
             FunctionalProteinsRegistry.Setup();
 
-            Console.Write("mode c/r: ");
+            Console.WriteLine("Adenine Lang was started. enter 'help' to get all tool modes.");
 
-            string mode = Console.ReadLine() ?? "";
+            while (true)
+            {
+                Console.Write("> ");
 
-            if (mode == "c") Compile();
-            if (mode == "r") Run();
-            if (mode == "t") if (Compile()) Run();
+                string mode = Console.ReadLine() ?? "";
+
+                if (mode == "help")
+                    WriteModes();
+
+                else if (mode == "c") 
+                { 
+                    Compile();
+                    break;
+                }
+
+                else if (mode == "r") 
+                {
+                    Run();
+                    break;
+                }
+
+                else if (mode == "t")
+                {
+                    if (Compile())
+                        Run();
+
+                    break;
+                }
+
+                else
+                {
+                    Console.WriteLine("Incorrect mode or command!");
+                }
+            }
 
             /*if (args == null || args.Length <= 0)
             {
@@ -65,7 +94,7 @@ namespace Adenine
             else
             {
                 if (cell == null) throw new Exception();
-                
+
                 Console.WriteLine("Compilation was successful!");
 
                 if (debugData != null)
@@ -91,7 +120,7 @@ namespace Adenine
 
             DebugData debugData = null;
 
-            if (File.Exists(DebugDataFile) && cell != null) 
+            if (File.Exists(DebugDataFile) && cell != null)
             {
                 byte[] debugByte = File.ReadAllBytes(DebugDataFile);
                 debugData = DebugDataSerializer.DeSerialize(cell, debugByte);
@@ -107,6 +136,15 @@ namespace Adenine
             //Logging.Program.Save();
 
             Console.ReadLine();
+        }
+
+        private static void WriteModes()
+        {
+            Console.WriteLine("Modes:");
+            Console.WriteLine(" c - compile code");
+            Console.WriteLine(" r - run compiled program");
+            Console.WriteLine(" t - compilate code and run");
+            Console.WriteLine(" d - decompile program");
         }
     }
 }
