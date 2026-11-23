@@ -2,6 +2,7 @@
 using Adenine.CodeObjects.FunctionalProteins;
 using Adenine.Compiler.Registry;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,17 +16,63 @@ namespace Adenine.Decompiler
         {
             List<CodeFile> files = new List<CodeFile>();
 
-            files.Add(DecompileFile(cell, cell.Gens, -1));
+            Dictionary<int, List<int>> proteinInScopes = new Dictionary<int, List<int>>();
 
             for (int i = 0; i < cell.Plasmids.Length; i++)
             {
-                files.Add(DecompileFile(cell, cell.Plasmids[i].ToArray(), i));
+                AddProteinToScope(cell, cell.Plasmids[i].ToArray(), i, proteinInScopes);
+            }
+
+            AddProteinToScope(cell, cell.Gens, -1, proteinInScopes);
+
+            files.Add(DecompileFile(cell, cell.Gens, -1, proteinInScopes));
+
+            for (int i = 0; i < cell.Plasmids.Length; i++)
+            {
+                files.Add(DecompileFile(cell, cell.Plasmids[i].ToArray(), i, proteinInScopes));
             }
 
             return files;
         }
 
-        private static CodeFile DecompileFile(Cell cell, Gen[] gens, int plasmid)
+        private static void AddProteinToScope(Cell cell, Gen[] gens, int plasmid, Dictionary<int, List<int>> proteinInScopes)
+        {
+            for (int i = 0; i < gens.Length; i++)
+            {
+                for (int j = 0; j < gens[i].Results.Length; j++)
+                {
+                    Result result = gens[i].Results[j];
+
+                    int protein = result.ProteinIndex;
+
+                    if (!result.Action)
+                    {
+                        bool exist = false;
+
+                        foreach (var scope in proteinInScopes)
+                        {
+                            if (scope.Value.FindIndex(p => p == protein) >= 0)
+                            {
+                                exist = true;
+                                break;
+                            }
+                        }
+
+                        if (!exist)
+                        {
+                            if (!proteinInScopes.ContainsKey(plasmid))
+                            {
+                                proteinInScopes.Add(plasmid, new List<int>());
+                            }
+
+                            proteinInScopes[plasmid].Add(protein);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static CodeFile DecompileFile(Cell cell, Gen[] gens, int plasmid, Dictionary<int, List<int>> proteinInScopes)
         {
             StringBuilder buffer = new StringBuilder();
 
@@ -37,7 +84,8 @@ namespace Adenine.Decompiler
                 buffer.Append("\r\n");
             }
 
-            buffer.Append("\r\n");
+            if (cell.Plasmids.Length > 0)
+                buffer.Append("\r\n");
 
             for (int i = 0; i < gens.Length; i++)
             {
@@ -54,8 +102,10 @@ namespace Adenine.Decompiler
                 {
                     Condition condition = gen.Conditions[j];
 
-                    buffer.Append("\t\tp");
-                    buffer.Append(i);
+                    buffer.Append("\t\t");
+                    buffer.Append(GetPrefixName(condition.ProteinIndex, proteinInScopes));
+                    buffer.Append("p");
+                    buffer.Append(condition.ProteinIndex);
 
                     buffer.Append(" ");
                     buffer.Append(ComparisonOperatorParser.ToString(condition.Operator));
@@ -64,6 +114,7 @@ namespace Adenine.Decompiler
 
                     if (condition.UseProteinValue)
                     {
+                        buffer.Append(GetPrefixName(condition.ComparingProtein, proteinInScopes));
                         buffer.Append("p");
                         buffer.Append(condition.ComparingProtein);
                     }
@@ -91,6 +142,8 @@ namespace Adenine.Decompiler
 
                     buffer.Append(ProteinOperationParser.ToString(result.Operation));
 
+                    bool isInject = false;
+
                     if (result.Action)
                     {
                         buffer.Append(" action ");
@@ -98,6 +151,11 @@ namespace Adenine.Decompiler
                         if (FunctionalProteinsRegistry.Proteins.TryGetValue(result.ProteinIndex, out FunctionalProtein? protein))
                         {
                             buffer.Append(protein.Name);
+
+                            if (protein.Index == 12)
+                            {
+                                isInject = true;
+                            }
                         }
                     }
 
@@ -110,6 +168,7 @@ namespace Adenine.Decompiler
                             buffer.Append("#");
                         }
 
+                        buffer.Append(GetPrefixName(result.ProteinIndex, proteinInScopes));
                         buffer.Append("p");
                         buffer.Append(result.ProteinIndex);
                     }
@@ -119,6 +178,7 @@ namespace Adenine.Decompiler
 
                     if (result.UseProteinValue)
                     {
+                        buffer.Append(GetPrefixName(result.InputProtein, proteinInScopes));
                         buffer.Append("p");
                         buffer.Append(result.InputProtein);
 
@@ -128,7 +188,21 @@ namespace Adenine.Decompiler
                         }
                     }
 
-                    else buffer.Append(result.Value.ToString().Replace(',', '.'));
+                    else
+                    {
+                        if (isInject)
+                        {
+                            buffer.Append("plasmid");
+                            buffer.Append((int)result.Value);
+                            buffer.Append(" ");
+                            buffer.Append(ReservedNames.GetPlasmid);
+                        }
+
+                        else
+                        {
+                            buffer.Append(result.Value.ToString().Replace(',', '.'));
+                        }
+                    }
 
                     buffer.Append(")");
 
@@ -153,6 +227,31 @@ namespace Adenine.Decompiler
             }
 
             return new CodeFile(buffer.ToString(), fileName);
+        }
+
+        private static string GetPrefixName(int protein, Dictionary<int, List<int>> proteinInScopes)
+        {
+            string prefix = "";
+
+            foreach (var scope in proteinInScopes)
+            {
+                if (scope.Value.FindIndex(p => p == protein) >= 0)
+                {
+                    if (scope.Key < 0)
+                    {
+                        prefix = ".";
+                    }
+
+                    else
+                    {
+                        prefix = "plasmid" + scope.Key + ".";
+                    }
+
+                    break;
+                }
+            }
+
+            return prefix;
         }
     }
 }

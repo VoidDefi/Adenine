@@ -137,7 +137,7 @@ namespace Adenine
 
             Console.WriteLine();
 
-            Thread.Sleep(3);
+            Thread.Sleep(1);
 
             Console.Clear();
 

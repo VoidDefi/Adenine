@@ -1074,7 +1074,7 @@ namespace Adenine.Compiler
                                     errors.Add(new NotAvailableInContextError(token.LineNumber));
                                 }
 
-                                else variable = token;
+                                else variable = TryToFullNameProtein(token, scopeName, errors);
                             }
 
                             else if (ComparisonOperatorParser.TryParse(token.Text, out ComparisonOperator? parsedOperator))
