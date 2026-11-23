@@ -41,6 +41,8 @@ namespace Adenine.Commands
                 }
             }
 
+            Console.WriteLine($"");
+
             return true;
         }
 
@@ -63,7 +65,7 @@ namespace Adenine.Commands
 
             if (command.Arguments.Length > 0)
             {
-                commandHelp += Colors.DarkGray;
+                commandHelp += Colors.Yellow;
             }
 
             for (int i = 0; i < command.Arguments.Length; i++)

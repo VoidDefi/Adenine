@@ -10,11 +10,17 @@ namespace Adenine
 {
     public class Program
     {
+        public static string CurrentProject { get; internal set; } = "";
+
+        internal static string CurrentProjectFile => "curproj.txt";
+
         private static string CodeFile => "code.adn";
 
         private static string ProgramFile => "program.gex";
 
         private static string DebugDataFile => "program.df";
+
+        public static string[] Projects { get; private set; } = [];
 
         public static void Main(string[] args)
         {
@@ -23,22 +29,72 @@ namespace Adenine
             CommandRegistry.Setup();
             FunctionalProteinsRegistry.Setup();
 
-            Console.WriteLine("Adenine Lang was started. Enter 'help' to get all tool modes/commands.");
+            FindProjects();
+
+            if (!Directory.Exists("projects"))
+                Directory.CreateDirectory("projects");
+
+            if (File.Exists(CurrentProjectFile))
+            {
+                CurrentProject = File.ReadAllText(CurrentProjectFile);
+
+                if (!Projects.Contains(CurrentProject))
+                {
+                    CurrentProject = "";
+                }
+            }
+
+            Console.WriteLine($"Adenine Lang was started. Enter '{Colors.Green}help{Colors.Reset}' to get all tool modes/commands.");
+
+            if (CurrentProject != "")
+                Console.WriteLine($"{Colors.Gray}Current project is {Colors.DarkCyan}{CurrentProject}{Colors.Reset}");
 
             while (true)
             {
                 Console.Write("> ");
 
                 string input = Console.ReadLine() ?? "";
-                string name = input;
+                input += ' ';
+
+                string name = "";
+                List<string> arguments = new();
+
+                string buffer = "";
+
+                for (int i = 0; i < input.Length; i++)
+                {
+                    char symbol = input[i];
+
+                    if (symbol != ' ')
+                        buffer += input[i];
+
+                    else
+                    {
+                        if (buffer != "")
+                        {
+                            if (name == "")
+                                name = buffer;
+
+                            else
+                            {
+                                arguments.Add(buffer);
+                            }
+
+                            buffer = "";
+                        }
+                    }
+                }
 
                 int index = CommandRegistry.Commands.FindIndex(c => c.Name == name);
 
-                string[] arguments = [];
-
                 if (index >= 0)
                 {
-                    CommandRegistry.Commands[index].Execute(arguments);
+                    if (CommandRegistry.Commands[index].Arguments.Length != arguments.Count)
+                    {
+                        Console.WriteLine("Wrong arguments count!");
+                    }
+
+                    else CommandRegistry.Commands[index].Execute(arguments.ToArray());
                 }
 
                 else
@@ -65,7 +121,13 @@ namespace Adenine
 
         internal static bool Compile()
         {
-            string code = File.ReadAllText(CodeFile);
+            if (CurrentProject == "" || !Directory.Exists($"projects\\{CurrentProject}\\"))
+            {
+                Console.WriteLine($"Project not selected or does not exist. Please if necessary, create new project using the '{Colors.Green}newproj{Colors.Reset}' command, then select project which '{Colors.Green}projects{Colors.Reset}' -> '{Colors.Green}chooseproj{Colors.Reset}'");
+                return false;
+            }
+
+            string code = File.ReadAllText($"projects\\{CurrentProject}\\" + CodeFile);
 
             List<Error> errors;
             DebugData debugData = null;
@@ -74,10 +136,15 @@ namespace Adenine
 
             if (errors.Count > 0)
             {
+                Console.WriteLine($"Compilation of '{Colors.Cyan}{CurrentProject}{Colors.Reset}' ended which {errors.Count} error(s):{Colors.Red}");
+
                 for (int i = 0; i < errors.Count; i++)
                 {
-                    Console.WriteLine(errors[i].ToString());
+                    Console.WriteLine(" " + errors[i].ToString());
                 }
+
+                Console.Write(Colors.Reset);
+
                 return false;
             }
 
@@ -85,16 +152,21 @@ namespace Adenine
             {
                 if (cell == null) throw new Exception();
 
-                Console.WriteLine("Compilation was successful!");
+                Console.WriteLine($"Compilation of '{Colors.Cyan}{CurrentProject}{Colors.Reset}' was successful!");
+
+                string binDirectory = $"projects\\{CurrentProject}\\bin";
+
+                if (!Directory.Exists(binDirectory))
+                    Directory.CreateDirectory(binDirectory);
 
                 if (debugData != null)
                 {
                     byte[] debugBytes = DebugDataSerializer.Serialize(debugData);
-                    File.WriteAllBytes(DebugDataFile, debugBytes);
+                    File.WriteAllBytes($"{binDirectory}\\{DebugDataFile}", debugBytes);
                 }
 
                 byte[] programBytes = ProgramSerializer.Serialize(cell);
-                File.WriteAllBytes(ProgramFile, programBytes);
+                File.WriteAllBytes($"{binDirectory}\\{ProgramFile}", programBytes);
             }
 
             return true;
@@ -102,17 +174,29 @@ namespace Adenine
 
         internal static void Run()
         {
-            if (!File.Exists(ProgramFile)) return;
+            if (CurrentProject == "" || !Directory.Exists($"projects\\{CurrentProject}\\"))
+            {
+                Console.WriteLine($"Project not selected or does not exist. Please if necessary, create new project using the '{Colors.Green}newproj{Colors.Reset}' command, then select project which '{Colors.Green}projects{Colors.Reset}' -> '{Colors.Green}chooseproj{Colors.Reset}'");
+                return;
+            }
 
-            Cell cell = ProgramSerializer.DeSerialize(File.ReadAllBytes(ProgramFile));
+            string binDirectory = $"projects\\{CurrentProject}\\bin\\";
 
-            Console.WriteLine("Program was loaded");
+            if (!File.Exists($"{binDirectory}{ProgramFile}"))
+            {
+                Console.WriteLine($"Genetic executable file of '{Colors.Cyan}{CurrentProject}{Colors.Reset}' does not exist!");
+                return;
+            }
+
+            Cell cell = ProgramSerializer.DeSerialize(File.ReadAllBytes($"{binDirectory}{ProgramFile}"));
+
+            Console.WriteLine($"Program '{Colors.Cyan}{CurrentProject}{Colors.Reset}' was loaded");
 
             DebugData debugData = null;
 
-            if (File.Exists(DebugDataFile) && cell != null)
+            if (File.Exists($"{binDirectory}{DebugDataFile}") && cell != null)
             {
-                byte[] debugByte = File.ReadAllBytes(DebugDataFile);
+                byte[] debugByte = File.ReadAllBytes($"{binDirectory}{DebugDataFile}");
                 debugData = DebugDataSerializer.DeSerialize(cell, debugByte);
 
                 Console.WriteLine("Debug file was loaded");
@@ -138,9 +222,21 @@ namespace Adenine
 
         internal static void Decompile()
         {
-            if (!File.Exists(ProgramFile)) return;
+            if (CurrentProject == "" || !Directory.Exists($"projects\\{CurrentProject}\\"))
+            {
+                Console.WriteLine($"Project not selected or does not exist. Please if necessary, create new project using the '{Colors.Green}newproj{Colors.Reset}' command, then select project which '{Colors.Green}projects{Colors.Reset}' -> '{Colors.Green}chooseproj{Colors.Reset}'");
+                return;
+            }
 
-            Cell cell = ProgramSerializer.DeSerialize(File.ReadAllBytes(ProgramFile));
+            string binDirectory = $"projects\\{CurrentProject}\\bin\\";
+
+            if (!File.Exists($"{binDirectory}{ProgramFile}"))
+            {
+                Console.WriteLine($"Genetic executable file of '{Colors.Cyan}{CurrentProject}{Colors.Reset}' does not exist!");
+                return;
+            }
+
+            Cell cell = ProgramSerializer.DeSerialize(File.ReadAllBytes($"{binDirectory}{ProgramFile}"));
             List<CodeFile> files = AdenineDecompiler.Decompile(cell);
 
             string outDirectory = "decompiled";
@@ -149,7 +245,7 @@ namespace Adenine
                 Directory.CreateDirectory(outDirectory);
 
             DateTime dateTime = DateTime.Now;
-            string curDecompileDir = outDirectory + "\\" + dateTime.ToString().Replace(':', '.');
+            string curDecompileDir = outDirectory + "\\" + CurrentProject + "_" + dateTime.ToString().Replace(':', '.');
 
             foreach (CodeFile file in files)
             {
@@ -158,7 +254,24 @@ namespace Adenine
                 File.WriteAllText(curDecompileDir + "\\" + file.FileName, file.Code);
             }
 
-            Console.WriteLine($"Program decompiled in '{curDecompileDir}'."); 
+            Console.WriteLine($"Program '{Colors.Cyan}{CurrentProject}{Colors.Reset}' decompiled in '{curDecompileDir}'.");
+        }
+
+        internal static void FindProjects()
+        {
+            string[] projectsDirs = Directory.GetDirectories("projects");
+
+            List<string> projects = new();
+
+            foreach (string project in projectsDirs)
+            {
+                if (File.Exists($"{project}\\{CodeFile}"))
+                {
+                    projects.Add(Path.GetFileName(project) ?? $"{Colors.Red}Error{Colors.Reset}");
+                }
+            }
+
+            Projects = projects.ToArray();
         }
     }
 }

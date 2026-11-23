@@ -11,7 +11,7 @@ namespace Adenine.Commands
     {
         public override string Name => "t";
 
-        public override string Description => "compilate code and run";
+        public override string Description => "compile code and run";
 
         public override Argument[] Arguments => [];
 
