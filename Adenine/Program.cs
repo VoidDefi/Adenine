@@ -1,4 +1,5 @@
 ﻿using Adenine.CodeObjects;
+using Adenine.Commands;
 using Adenine.Compiler;
 using Adenine.Compiler.Registry;
 using Adenine.Compiler.Serializing;
@@ -19,43 +20,25 @@ namespace Adenine
         {
             ReservedNames.SetupRegistry();
             ReservedSymbols.SetupRegistry();
+            CommandRegistry.Setup();
             FunctionalProteinsRegistry.Setup();
 
-            Console.WriteLine("Adenine Lang was started. Enter 'help' to get all tool modes.");
+            Console.WriteLine("Adenine Lang was started. Enter 'help' to get all tool modes/commands.");
 
             while (true)
             {
                 Console.Write("> ");
 
-                string mode = Console.ReadLine() ?? "";
+                string input = Console.ReadLine() ?? "";
+                string name = input;
 
-                if (mode == "help")
-                    WriteModes();
+                int index = CommandRegistry.Commands.FindIndex(c => c.Name == name);
 
-                else if (mode == "c") 
-                { 
-                    Compile();
-                    break;
-                }
+                string[] arguments = [];
 
-                else if (mode == "r") 
+                if (index >= 0)
                 {
-                    Run();
-                    break;
-                }
-
-                else if (mode == "t")
-                {
-                    if (Compile())
-                        Run();
-
-                    break;
-                }
-
-                else if (mode == "d")
-                {
-                    Decompile();
-                    break;
+                    CommandRegistry.Commands[index].Execute(arguments);
                 }
 
                 else
@@ -80,7 +63,7 @@ namespace Adenine
             }*/
         }
 
-        private static bool Compile()
+        internal static bool Compile()
         {
             string code = File.ReadAllText(CodeFile);
 
@@ -117,13 +100,13 @@ namespace Adenine
             return true;
         }
 
-        private static void Run()
+        internal static void Run()
         {
             if (!File.Exists(ProgramFile)) return;
 
             Cell cell = ProgramSerializer.DeSerialize(File.ReadAllBytes(ProgramFile));
 
-            Console.WriteLine("\r\nProgram was loaded");
+            Console.WriteLine("Program was loaded");
 
             DebugData debugData = null;
 
@@ -135,11 +118,10 @@ namespace Adenine
                 Console.WriteLine("Debug file was loaded");
             }
 
-            Console.WriteLine();
-
             Thread.Sleep(1);
 
-            Console.Clear();
+            //go to new window
+            Console.Write("\x1b[?1049h\x1b[H");
 
             VirtualMachine.Setup(cell, debugData);
             VirtualMachine.Start();
@@ -147,9 +129,14 @@ namespace Adenine
             //Logging.Program.Save();
 
             Console.ReadLine();
+
+            Thread.Sleep(1);
+
+            //return to start window
+            Console.Write("\x1b[?1049l");
         }
 
-        private static void Decompile()
+        internal static void Decompile()
         {
             if (!File.Exists(ProgramFile)) return;
 
@@ -172,15 +159,6 @@ namespace Adenine
             }
 
             Console.WriteLine($"Program decompiled in '{curDecompileDir}'."); 
-        }
-
-        private static void WriteModes()
-        {
-            Console.WriteLine("Modes:");
-            Console.WriteLine(" c - compile code");
-            Console.WriteLine(" r - run compiled program");
-            Console.WriteLine(" t - compilate code and run");
-            Console.WriteLine(" d - decompile program");
         }
     }
 }
