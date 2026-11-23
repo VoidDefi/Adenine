@@ -2,6 +2,7 @@
 using Adenine.Compiler;
 using Adenine.Compiler.Registry;
 using Adenine.Compiler.Serializing;
+using Adenine.Decompiler;
 using Adenine.VirtualMachineEngine;
 
 namespace Adenine
@@ -48,6 +49,12 @@ namespace Adenine
                     if (Compile())
                         Run();
 
+                    break;
+                }
+
+                else if (mode == "d")
+                {
+                    Decompile();
                     break;
                 }
 
@@ -140,6 +147,31 @@ namespace Adenine
             //Logging.Program.Save();
 
             Console.ReadLine();
+        }
+
+        private static void Decompile()
+        {
+            if (!File.Exists(ProgramFile)) return;
+
+            Cell cell = ProgramSerializer.DeSerialize(File.ReadAllBytes(ProgramFile));
+            List<CodeFile> files = AdenineDecompiler.Decompile(cell);
+
+            string outDirectory = "decompiled";
+
+            if (!Directory.Exists(outDirectory))
+                Directory.CreateDirectory(outDirectory);
+
+            DateTime dateTime = DateTime.Now;
+            string curDecompileDir = outDirectory + "\\" + dateTime.ToString().Replace(':', '.');
+
+            foreach (CodeFile file in files)
+            {
+                Directory.CreateDirectory(curDecompileDir);
+
+                File.WriteAllText(curDecompileDir + "\\" + file.FileName, file.Code);
+            }
+
+            Console.WriteLine($"Program decompiled in '{curDecompileDir}'."); 
         }
 
         private static void WriteModes()
