@@ -75,7 +75,7 @@ namespace Adenine.Compiler
 
                     else
                     {
-                        string path = insert.Text + ".plm";
+                        string path = $"projects\\{Program.CurrentProject}\\" + insert.Text + ".plm";
 
                         if (File.Exists(path))
                         {
