@@ -22,6 +22,8 @@ namespace Adenine
 
         public static string Yellow => "\x1b[38;2;256;256;0m";
 
+        public static string Orange => "\x1b[38;2;256;128;0m";
+
         public static string DarkCyan => "\x1b[38;2;0;128;128m";
 
         public static string Reset => "\x1b[0m";

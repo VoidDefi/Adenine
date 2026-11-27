@@ -35,7 +35,7 @@ namespace Adenine.Commands
                     Directory.CreateDirectory(directory);
                     File.WriteAllText($"{directory}\\code.adn", BaseCode);
 
-                    CopyDirectory("lib", $"{directory}\\lib");
+                    Program.CopyDirectory("lib", $"{directory}\\lib");
 
                     Program.FindProjects();
                     Console.WriteLine($"Project '{Colors.Cyan}{args[0]}{Colors.Reset}' was successful created!");
@@ -43,32 +43,6 @@ namespace Adenine.Commands
             }
 
             return true;
-        }
-
-        //code from https://learn.microsoft.com/dotnet/standard/io/how-to-copy-directories
-        private static void CopyDirectory(string sourceDir, string destinationDir)
-        {
-            var dir = new DirectoryInfo(sourceDir);
-
-            if (!dir.Exists)
-            {
-                Console.WriteLine($"{Colors.Red}Standard library does not exists!{Colors.Reset}");
-            }
-
-            DirectoryInfo[] dirs = dir.GetDirectories();
-            Directory.CreateDirectory(destinationDir);
-
-            foreach (FileInfo file in dir.GetFiles())
-            {
-                string targetFilePath = Path.Combine(destinationDir, file.Name);
-                file.CopyTo(targetFilePath);
-            }
-
-            foreach (DirectoryInfo subDir in dirs)
-            {
-                string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
-                CopyDirectory(subDir.FullName, newDestinationDir);
-            }
         }
     }
 }
