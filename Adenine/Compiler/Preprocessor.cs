@@ -18,7 +18,7 @@ namespace Adenine.Compiler
 
             while (true)
             {
-                List<Token> inserts = new();  
+                List<Token> inserts = new();
 
                 for (int i = 0; i < lines.Count; i++)
                 {
@@ -36,7 +36,7 @@ namespace Adenine.Compiler
                     {
                         int start = insertIndex + ReservedNames.Insert.Length;
 
-                        StringBuilder path = new(); 
+                        StringBuilder path = new();
 
                         for (int j = start; j < end; j++)
                         {
@@ -95,6 +95,82 @@ namespace Adenine.Compiler
                 }
 
                 lines.InsertRange(0, addedLines);
+            }
+
+            List<(Token original, Token replaced)> replaces = new();
+
+            for (int i = 0; i < lines.Count; i++)
+            {
+                int replaceIndex = lines[i].Text.IndexOf(ReservedNames.Replace);
+                int startCommentIndex = lines[i].Text.IndexOf("//");
+
+                int end = lines[i].Text.Length;
+
+                if (startCommentIndex >= 0)
+                {
+                    end = startCommentIndex;
+                }
+
+                if (replaceIndex >= 0)
+                {
+                    int start = replaceIndex + ReservedNames.Replace.Length;
+
+                    StringBuilder original = new();
+                    int replacedStart = -1;
+
+                    for (int j = start; j < end; j++)
+                    {
+                        char symbol = lines[i].Text[j];
+
+                        if (symbol == ':')
+                        {
+                            replacedStart = j + 1;
+                            break;
+                        }
+
+                        if (AdenineCompiler.IsNotSpace(symbol))
+                        {
+                            original.Append(symbol);
+                        }
+                    }
+
+                    if (replacedStart > start)
+                    {
+                        StringBuilder replacedText = new();
+
+                        for (int j = replacedStart; j < end; j++)
+                        {
+                            char symbol = lines[i].Text[j];
+                            replacedText.Append(symbol);
+                        }
+
+                        if (replaces.FindIndex(t => t.original.Text == original.ToString()) < 0)
+                        {
+                            Token originalToken = new Token(original.ToString(), lines[i].Number);
+                            Token replacedTextToken = new Token(replacedText.ToString(), lines[i].Number);
+
+                            replaces.Add((originalToken, replacedTextToken));
+                        }
+                    }
+
+                    else
+                    {
+                        errors.Add(new WrongReplaceSignaturePreprocessorError(lines[i].Number));
+                    }
+
+                    lines[i] = new Line("\r", lines[i].Number);
+                }
+            }
+
+            foreach (var replace in replaces)
+            {
+                for (int i = 0; i < lines.Count; i++)
+                {
+                    Line line = lines[i];
+
+                    line.Text = line.Text.Replace(replace.original.Text, replace.replaced.Text);
+                    lines[i] = line;
+                }
             }
 
             return lines;

@@ -54,6 +54,10 @@ namespace Adenine.Compiler.Registry
 
         public static string Insert => "~insert";
 
+        public static string Replace => "~replace";
+
+        public static string PrivateReplace => "~privreplace";
+
         public static string[] Registry { get; private set; } = [];
 
         public static void SetupRegistry()
