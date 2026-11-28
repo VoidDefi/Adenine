@@ -1,0 +1,15 @@
+~replace NOWAY  : ways.noway != ways.noway
+~replace ANYWAY : ways.noway == ways.noway
+
+gen init
+{
+	condition
+	{
+		ANYWAY
+	}
+
+	result
+	{
+		set noway(0)
+	}
+}
